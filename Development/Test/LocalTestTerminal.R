@@ -1,27 +1,18 @@
 
 
-library(dsP21Curator)
 library(dplyr)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Load P21 data as raw data set
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
-RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet_PreProcessed.rds")
+RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
+#RawDataSetProc <- readRDS(file = "./Development/Data/RealData/RawDataSet_PreProcessed.rds")
 
 
+RawDataSet <- PrepareRawDataSetDS(RawDataSetName.S = "RawDataSet",
+                                  FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
 
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Rename tables of RawDataSet (the names are also changed when tables are being loaded into R server sessions)
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# vc_Lookup <- paste0("RDS_", dsCCPhos::Meta_Tables$TableName_Curated)
-# names(vc_Lookup) <- dsCCPhos::Meta_Tables$TableName_Raw
-#
-# names(RawDataSet) <- sapply(names(RawDataSet),
-#                             function(TableName) { vc_Lookup[TableName] })
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,11 +20,8 @@ RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet_PreProcesse
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 RDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "RawDataSet",
-                                   AssumeCCPDataSet.S = TRUE)
-                                   # RequiredTableNames.S = paste0("RDS_", dsCCPhos::Meta_Tables$TableName_Curated),
-                                   # RequiredFeatureNames.S = RequiredTableNames.S %>%
-                                   #                              map(\(tablename) filter(dsCCPhos::Meta_Features, TableName_Curated == str_remove(tablename, "RDS_"))$FeatureName_Raw) %>%
-                                   #                              set_names(RequiredTableNames.S))
+                                   Module.S = "P21",
+                                   TransformationStage.S = "Raw")
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
