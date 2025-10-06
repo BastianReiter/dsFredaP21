@@ -21,15 +21,15 @@ RawDataSet <- PrepareRawDataSetDS(RawDataSetName.S = "RawDataSet",
 
 RDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "RawDataSet",
                                    Module.S = "P21",
-                                   TransformationStage.S = "Raw")
+                                   Stage.S = "Raw")
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # OPTIONAL: Draw sample from Raw Data Set
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# RawDataSet <- DrawSampleDS(RawDataSetName.S = "RawDataSet",
-#                            SampleSize.S = "1000")
+RawDataSet <- DrawSampleDS(RawDataSetName.S = "RawDataSet",
+                           SampleSize.S = 5000)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -42,19 +42,18 @@ CurationOutput <- CurateDataDS(RawDataSetName.S = "RawDataSet",
                                                  FeatureTracking = list(Profile = "Default"),
                                                  TableCleaning = list(Run = TRUE)))
 
-
-
 CuratedDataSet <- CurationOutput$CuratedDataSet
 
 CDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "CuratedDataSet",
-                                AssumeCCPDataSet.S = TRUE)
+                                   Module.S = "P21",
+                                   Stage.S = "Curated")
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Augment data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-AugmentationOutput <- dsCCPhos::AugmentDataDS(CuratedDataSetName.S = "CuratedDataSet")
+AugmentationOutput <- dsFredaP21::AugmentDataDS(CuratedDataSetName.S = "CuratedDataSet")
 
 ADS <- AugmentationOutput$AugmentedDataSet
 

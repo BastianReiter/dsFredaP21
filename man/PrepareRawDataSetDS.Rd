@@ -4,7 +4,10 @@
 \alias{PrepareRawDataSetDS}
 \title{PrepareRawDataSetDS}
 \usage{
-PrepareRawDataSetDS(RawDataSetName.S = "RawDataSet")
+PrepareRawDataSetDS(
+  RawDataSetName.S = "RawDataSet",
+  FeatureNameDictionary.S = list()
+)
 }
 \arguments{
 \item{RawDataSetName.S}{\code{string} - Name of Raw Data Set object (list) on server - Default: 'RawDataSet'}

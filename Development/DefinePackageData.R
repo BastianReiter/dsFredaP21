@@ -1,6 +1,7 @@
 
 library(dplyr)
 library(readxl)
+library(stringr)
 library(usethis)
 
 
@@ -60,11 +61,49 @@ for (sheetname in Sheetnames)
 # Resource data from TinkerLab
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Res.DischargeReasons <- TinkerLab::Res.P21DischargeReasons
-use_data(Res.DischargeReasons, overwrite = TRUE)
+Res.CancerGrouping <- TinkerLab::Res.CancerGrouping
+use_data(Res.CancerGrouping, overwrite = TRUE)
 
-Res.Departments <- TinkerLab::Res.P21Departments
-use_data(Res.Departments, overwrite = TRUE)
+Res.CancerSurgery <- TinkerLab::Res.CancerSurgery
+use_data(Res.CancerSurgery, overwrite = TRUE)
+
+Res.HIVCoding.Diseases <- TinkerLab::Res.HIVCoding.Diseases
+use_data(Res.HIVCoding.Diseases, overwrite = TRUE)
+
+Res.HIVCoding.Status <- TinkerLab::Res.HIVCoding.Status
+use_data(Res.HIVCoding.Status, overwrite = TRUE)
+
+Res.OPSCodes <- TinkerLab::Res.OPSCodes
+use_data(Res.OPSCodes, overwrite = TRUE)
+
+Res.P21.AdmissionCauses <- TinkerLab::Res.P21.AdmissionCauses
+use_data(Res.P21.AdmissionCauses, overwrite = TRUE)
+
+Res.P21.DischargeReasons <- TinkerLab::Res.P21.DischargeReasons
+use_data(Res.P21.DischargeReasons, overwrite = TRUE)
+
+Res.P21.Departments <- TinkerLab::Res.P21.Departments
+use_data(Res.P21.Departments, overwrite = TRUE)
+
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Resource data from external package 'ICD10gm'
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Res.ICD10Codes <- ICD10gm::icd_meta_codes %>%
+                      select(year,
+                             icd_code,
+                             label) %>%
+                      rename(c(ICDVersion = "year",
+                               ICD10Code = "icd_code",
+                               Diagnosis = "label")) %>%
+                      mutate(ICDVersion = as.character(ICDVersion),
+                             ICD10Code = str_remove_all(ICD10Code, "\\.-"))
+
+use_data(Res.ICD10Codes, overwrite = TRUE)
 
 
 
@@ -77,5 +116,13 @@ DisclosureSettings.FredaP21 <- list(Profile = "loose",     # Optional: 'strict',
 
 # Save data in .rda-file and make it part of package
 use_data(DisclosureSettings.FredaP21, overwrite = TRUE)
+
+
+
+
+
+
+
+
 
 

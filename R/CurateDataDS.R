@@ -29,7 +29,7 @@
 #'                                  \itemize{ \item Run \code{logical} - Whether or not to perform table cleaning (removal of redundant and ineligible entries) - Default: \code{TRUE}}
 #'                              \item \emph{TableNormalization} - \code{list}
 #'                                  \itemize{ \item Run \code{logical} - Whether or not to perform table normalization - Default: \code{TRUE}
-#'                                            \item RuleSet \code{data.frame} - Deault: \code{dsFredaP21::Proc.TableNormalization}
+#'                                            \item RuleSet \code{data.frame} - Default: \code{dsFredaP21::Proc.TableNormalization}
 #'                                            \item RuleSet.Profile \code{string} - Profile name defining rule set to be used for table normalization. Profile name must be stated in \code{TableNormalization$RuleSet} - Default: 'Default'}}
 #'
 #' @return A \code{list} containing the following objects:
@@ -190,9 +190,8 @@ CurateDataDS <- function(RawDataSetName.S = "RawDataSet",
   #                                              RuleSet = dsFredaP21::Proc.TableNormalization,
   #                                              RuleSet.Profile = "Default"))
 
-#-------------------------------------------------------------------------------
-# - Equip 'Settings' with default values in case of missing arguments -
-#-------------------------------------------------------------------------------
+
+  # --- Equip 'Settings' with default values in case of missing arguments ---
 
   # Rename 'Settings.S' argument for better code readability
   Settings <- Settings.S
@@ -217,7 +216,7 @@ CurateDataDS <- function(RawDataSetName.S = "RawDataSet",
   if (is.null(Settings$TableNormalization$RuleSet)) { Settings$TableNormalization$RuleSet <- dsFredaP21::Proc.TableNormalization }
   if (is.null(Settings$TableNormalization$RuleSet.Profile)) { Settings$TableNormalization$RuleSet.Profile <- "Default" }
 
-  # --- Argument Assertions ---
+  # --- Argument Validation ---
   assert_that(is.string(RawDataSetName.S))
 
   if (Settings$FeatureObligations$RuleSet.Profile %in% names(Settings$FeatureObligations$RuleSet) == FALSE)
