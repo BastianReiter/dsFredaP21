@@ -676,9 +676,9 @@ AugmentDataDS <- function(CuratedDataSetName.S = "CuratedDataSet",
                                DepartmentCode,
                                Department,
                                OperatingSpecialty)) %>%
-                        mutate(EventDate = as_datetime(ifelse(EventClass == "Diagnosis",
-                                                              EventDate[EventSubclass == "Admission"],
-                                                              EventDate))) %>%
+                        mutate(EventDate = as_date(ifelse(EventClass == "Diagnosis",
+                                                          EventDate[EventSubclass == "Admission"],
+                                                          EventDate))) %>%
                         arrange(PatientPseudonym, CasePseudonym, EventDate)
                     #=== Update Progress Bar ===
                     try(ProgressBar$tick())
@@ -961,13 +961,13 @@ AugmentDataDS <- function(CuratedDataSetName.S = "CuratedDataSet",
   ADS$Events <- ADS$Events %>%
                     group_by(PatientPseudonym) %>%
                         arrange(EventDate, EventClass, .by_group = TRUE) %>%
-                        mutate(LastSurgeryDate = as_datetime(ifelse(EventSubclass == "Surgery",
+                        mutate(LastSurgeryDate = as_date(ifelse(EventSubclass == "Surgery",
                                                                     EventDate,
                                                                     NA)),
-                               LastChemotherapyDate = as_datetime(ifelse(EventSubclass == "Chemotherapy",
+                               LastChemotherapyDate = as_date(ifelse(EventSubclass == "Chemotherapy",
                                                                          EventDate,
                                                                          NA)),
-                               LastChemotherapyDate_NonICU = as_datetime(ifelse(EventSpecification.A %in% c("ChemotherapyNonICU", "ChemotherapyUnknown"),
+                               LastChemotherapyDate_NonICU = as_date(ifelse(EventSpecification.A %in% c("ChemotherapyNonICU", "ChemotherapyUnknown"),
                                                                                 EventDate,
                                                                                 NA))) %>%
                         fill(LastSurgeryDate,
@@ -1027,24 +1027,24 @@ AugmentDataDS <- function(CuratedDataSetName.S = "CuratedDataSet",
 
   Aux.PatientSummaries.Events <- ADS$Events %>%
                                         group_by(PatientPseudonym) %>%
-                                        summarize(PresumedMainCancerDiagnosisDate = as_datetime(ifelse(any(EventSpecification.A == "Main Cancer Diagnosis"),
+                                        summarize(PresumedMainCancerDiagnosisDate = as_date(ifelse(any(EventSpecification.A == "Main Cancer Diagnosis"),
                                                                                                        EventDate[EventSpecification.A == "Main Cancer Diagnosis"],
                                                                                                        NA)),
                                                   PresumedMainCancerIsLikelyFirstDiagnosis = any(EventSpecification.C == "Likely First Diagnosis"),
-                                                  PresumedMainCancerFirstDiagnosisDate = as_datetime(ifelse(any(EventSpecification.C == "Likely First Diagnosis"),
+                                                  PresumedMainCancerFirstDiagnosisDate = as_date(ifelse(any(EventSpecification.C == "Likely First Diagnosis"),
                                                                                                             EventDate[EventSpecification.C == "Likely First Diagnosis"],
                                                                                                             NA)),
-                                                  PresumedMetastasisDiagnosisDate = as_datetime(ifelse(any(EventSpecification.A == "Metastasis Diagnosis"),
+                                                  PresumedMetastasisDiagnosisDate = as_date(ifelse(any(EventSpecification.A == "Metastasis Diagnosis"),
                                                                                                        EventDate[EventSpecification.A == "Metastasis Diagnosis"],
                                                                                                        NA)),
-                                                  PresumedHIVDiagnosisDate = as_datetime(ifelse(any(EventSpecification.A == "HIV Diagnosis"),
+                                                  PresumedHIVDiagnosisDate = as_date(ifelse(any(EventSpecification.A == "HIV Diagnosis"),
                                                                                                 EventDate[EventSpecification.A == "HIV Diagnosis"],
                                                                                                 NA)),
-                                                  PresumedAIDSDiagnosisDate = as_datetime(ifelse(any(EventSpecification.A == "AIDS Diagnosis"),
+                                                  PresumedAIDSDiagnosisDate = as_date(ifelse(any(EventSpecification.A == "AIDS Diagnosis"),
                                                                                                  EventDate[EventSpecification.A == "AIDS Diagnosis"],
                                                                                                  NA)),
                                                   #-------------------------------
-                                                  FirstRelevantAdmissionDate = as_datetime(ifelse(sum(EventSpecification.A == "Main Cancer Diagnosis") == 0 &
+                                                  FirstRelevantAdmissionDate = as_date(ifelse(sum(EventSpecification.A == "Main Cancer Diagnosis") == 0 &
                                                                                                     sum(EventSpecification.A == "HIV Diagnosis") == 0,      # If patient holds no main cancer or HIV diagnosis
                                                                                                   min(EventDate[EventSubclass == "Admission"], na.rm = TRUE),      # Then take the first admission date as value
                                                                                                   min(PresumedMainCancerDiagnosisDate, PresumedHIVDiagnosisDate, na.rm = TRUE))),
@@ -1058,7 +1058,7 @@ AugmentDataDS <- function(CuratedDataSetName.S = "CuratedDataSet",
                                                   TotalDocumentedTimeSpan = ceiling(as.numeric(difftime(max(EventDate), min(EventDate), units = "days")) + 1),
                                                   RelevantDocumentedTimeSpan = ceiling(as.numeric(difftime(max(EventDate), min(PresumedMainCancerDiagnosisDate, PresumedHIVDiagnosisDate), units = "days")) + 1),
                                                   #-------------------------------
-                                                  MainCancerFirstStay.TimeToFirstNonSurgicalTherapy = round(min(c(100000, as.numeric(difftime(as_datetime(EventDate[EventSubclass %in% c("Chemotherapy",
+                                                  MainCancerFirstStay.TimeToFirstNonSurgicalTherapy = round(min(c(100000, as.numeric(difftime(as_date(EventDate[EventSubclass %in% c("Chemotherapy",
                                                                                                                                                                                          "Immunotherapy",
                                                                                                                                                                                          "Radiotherapy",
                                                                                                                                                                                          "Nuclear Medicine Therapy",
@@ -1193,30 +1193,30 @@ if (Settings$CreateSubsets$Cancer == TRUE)
                                                             HadBoneMarrowTransplant = any(EventSubclass == "Bone Marrow Transplant"),
                                                             HadPotentialCARTCellTherapy = any(EventSubclass == "Potential CAR-T-Cell Therapy"),
                                                             #-------------------
-                                                            DateFirstCancerSurgery = as.Date(as_datetime(ifelse(any(EventSpecification.A %in% c("CancerSurgery.CurativeIntention.Primary",
+                                                            DateFirstCancerSurgery = as.Date(as_date(ifelse(any(EventSpecification.A %in% c("CancerSurgery.CurativeIntention.Primary",
                                                                                                                           "CancerSurgery.CurativeIntention.Secondary",
                                                                                                                           "CancerSurger_Supportive")),
                                                                                                          min(EventDate[str_starts(EventSpecification.A, "CancerSurgery")], na.rm = TRUE),
                                                                                                          NA))),
-                                                            DateFirstChemotherapy = as.Date(as_datetime(ifelse(HadChemotherapy == TRUE,
+                                                            DateFirstChemotherapy = as.Date(as_date(ifelse(HadChemotherapy == TRUE,
                                                                                                         min(EventDate[EventSubclass == "Chemotherapy"], na.rm = TRUE),
                                                                                                         NA))),
-                                                            DateFirstImmunotherapy = as.Date(as_datetime(ifelse(HadImmunotherapy == TRUE,
+                                                            DateFirstImmunotherapy = as.Date(as_date(ifelse(HadImmunotherapy == TRUE,
                                                                                                          min(EventDate[EventSubclass == "Immunotherapy"], na.rm = TRUE),
                                                                                                          NA))),
-                                                            DateFirstRadiotherapy = as.Date(as_datetime(ifelse(HadRadiotherapy == TRUE,
+                                                            DateFirstRadiotherapy = as.Date(as_date(ifelse(HadRadiotherapy == TRUE,
                                                                                                         min(EventDate[EventSubclass == "Radiotherapy"], na.rm = TRUE),
                                                                                                         NA))),
-                                                            DateFirstNuclearmedTherapy = as.Date(as_datetime(ifelse(HadNuclearmedTherapy == TRUE,
+                                                            DateFirstNuclearmedTherapy = as.Date(as_date(ifelse(HadNuclearmedTherapy == TRUE,
                                                                                                              min(EventDate[EventSubclass == "Nuclear Medicine Therapy"], na.rm = TRUE),
                                                                                                              NA))),
-                                                            DateFirstStemCellTherapy = as.Date(as_datetime(ifelse(HadStemCellTherapy == TRUE,
+                                                            DateFirstStemCellTherapy = as.Date(as_date(ifelse(HadStemCellTherapy == TRUE,
                                                                                                            min(EventDate[EventSubclass == "Stem Cell Therapy"], na.rm = TRUE),
                                                                                                            NA))),
-                                                            DateFirstBoneMarrowTransplant = as.Date(as_datetime(ifelse(HadBoneMarrowTransplant == TRUE,
+                                                            DateFirstBoneMarrowTransplant = as.Date(as_date(ifelse(HadBoneMarrowTransplant == TRUE,
                                                                                                                      min(EventDate[EventSubclass == "Bone Marrow Transplant"], na.rm = TRUE),
                                                                                                                      NA))),
-                                                            DateFirstPotentialCARTCellTherapy = as.Date(as_datetime(ifelse(HadPotentialCARTCellTherapy == TRUE,
+                                                            DateFirstPotentialCARTCellTherapy = as.Date(as_date(ifelse(HadPotentialCARTCellTherapy == TRUE,
                                                                                                                     min(EventDate[EventSubclass == "Potential CAR-T-Cell Therapy"], na.rm = TRUE),
                                                                                                                     NA))),
                                                             #-------------------
@@ -1224,7 +1224,7 @@ if (Settings$CreateSubsets$Cancer == TRUE)
                                                             HadComplication_Ventilation = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "Ventilation"),
                                                             HadComplication_Dialysis = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "Dialysis"),
                                                             HadComplication_TransferICU = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "TransferICU"),
-                                                            DateFirstComplicationAfterChemo = as.Date(as_datetime(ifelse(any(IsFirstPotentialComplication_AcrossCases == TRUE),
+                                                            DateFirstComplicationAfterChemo = as.Date(as_date(ifelse(any(IsFirstPotentialComplication_AcrossCases == TRUE),
                                                                                                                          EventDate[IsFirstPotentialComplication_AcrossCases == TRUE],
                                                                                                                          NA))),
                                                             TimeChemoToFirstComplication = ifelse(HadComplicationAfterChemo == TRUE,
@@ -1507,5 +1507,4 @@ if (Settings$CreateSubsets$HIVCancer)
   # })
 
 }
-
 
