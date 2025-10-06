@@ -1,169 +1,109 @@
 
+library(dplyr)
 library(readxl)
+library(stringr)
 library(usethis)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Settings: Raw Data Harmonization Methods
+# Read in Package Data from xlsx-file
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Meta_DataHarmonizationMethods <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                                            sheet = "DataHarmonizationMethods",
-                                            skip = 1)
+ExcelFilePath <- "./Development/Data/PackageData/PackageDataFredaP21.xlsx"
 
-# Save data in .rda-file and make it part of package
-use_data(Meta_DataHarmonizationMethods, overwrite = TRUE)
+Sheetnames <- c("Meta.Tables",
+                "Meta.Features",
+                "Meta.Values",
+                "Proc.EventFeatures",
+                "Proc.TableNormalization",
+                "Set.FeatureObligations",
+                "Set.FeatureTracking",
+                "Set.DataHarmonization",
+                "Set.TransformativeExpressions",
+                "Set.Dictionary",
+                "Set.FuzzyStringMatching")
 
+for (sheetname in Sheetnames)
+{
+    Table <- read_excel(path = ExcelFilePath,
+                        sheet = sheetname,
+                        skip = 2,
+                        col_types = "text")
 
+    ColumnTypes <- read_excel(path = ExcelFilePath,
+                              sheet = sheetname,
+                              range = cell_rows(2),
+                              col_names = colnames(Table)) %>%
+                      tidyr::pivot_longer(everything(),
+                             names_to = "Column",
+                             values_to = "Type")
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Meta Data: Departments
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if (nrow(ColumnTypes) > 0)
+    {
+        for (i in 1:nrow(ColumnTypes))
+        {
+            Table <- Table %>%
+                          mutate(across(all_of(ColumnTypes$Column[i]),
+                                        ~ dsFreda::FormatData(.x, ColumnTypes$Type[i])))
+        }
+    }
 
-Meta_Departments <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                               sheet = "Departments")
+    assign(x = sheetname,
+           value = Table)
 
-# Save data in .rda-file and make it part of package
-use_data(Meta_Departments, overwrite = TRUE)
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Settings: Dictionary (used in Data Harmonization)
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_Dictionary <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                              sheet = "Dictionary",
-                              skip = 1)
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_Dictionary, overwrite = TRUE)
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Meta Data: Discharge Reasons
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_DischargeReasons <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                                    sheet = "DischargeReasons")
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_DischargeReasons, overwrite = TRUE)
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Settings: Event Feature Engineering
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_EventFeatures <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                                 sheet = "EventFeatures")
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_EventFeatures, overwrite = TRUE)
+    # Save data in .rda-file and make it part of the package
+    do.call(use_data, list(as.name(sheetname), overwrite = TRUE))
+}
 
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Settings: Feature Obligations
+# Resource data from TinkerLab
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Meta_FeatureObligations <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                                      sheet = "FeatureObligations",
-                                      skip = 1)
+Res.CancerGrouping <- TinkerLab::Res.CancerGrouping
+use_data(Res.CancerGrouping, overwrite = TRUE)
 
-# Save data in .rda-file and make it part of package
-use_data(Meta_FeatureObligations, overwrite = TRUE)
+Res.CancerSurgery <- TinkerLab::Res.CancerSurgery
+use_data(Res.CancerSurgery, overwrite = TRUE)
+
+Res.HIVCoding.Diseases <- TinkerLab::Res.HIVCoding.Diseases
+use_data(Res.HIVCoding.Diseases, overwrite = TRUE)
+
+Res.HIVCoding.Status <- TinkerLab::Res.HIVCoding.Status
+use_data(Res.HIVCoding.Status, overwrite = TRUE)
+
+Res.OPSCodes <- TinkerLab::Res.OPSCodes
+use_data(Res.OPSCodes, overwrite = TRUE)
+
+Res.P21.AdmissionCauses <- TinkerLab::Res.P21.AdmissionCauses
+use_data(Res.P21.AdmissionCauses, overwrite = TRUE)
+
+Res.P21.DischargeReasons <- TinkerLab::Res.P21.DischargeReasons
+use_data(Res.P21.DischargeReasons, overwrite = TRUE)
+
+Res.P21.Departments <- TinkerLab::Res.P21.Departments
+use_data(Res.P21.Departments, overwrite = TRUE)
 
 
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Meta Data: Features
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_Features <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                            sheet = "Features")
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_Features, overwrite = TRUE)
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Settings: Feature Tracking
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_FeatureTracking <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                                   sheet = "FeatureTracking",
-                                   skip = 1)
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_FeatureTracking, overwrite = TRUE)
 
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Settings: Raw Data Harmonization Methods
+# Resource data from external package 'ICD10gm'
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Meta_FuzzyStringMatching <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                                       sheet = "FuzzyStringMatching",
-                                       skip = 1)
+Res.ICD10Codes <- ICD10gm::icd_meta_codes %>%
+                      select(year,
+                             icd_code,
+                             label) %>%
+                      rename(c(ICDVersion = "year",
+                               ICD10Code = "icd_code",
+                               Diagnosis = "label")) %>%
+                      mutate(ICDVersion = as.character(ICDVersion),
+                             ICD10Code = str_remove_all(ICD10Code, "\\.-"))
 
-# Save data in .rda-file and make it part of package
-use_data(Meta_FuzzyStringMatching, overwrite = TRUE)
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Settings: Table Normalization
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_TableNormalization <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                                      sheet = "TableNormalization",
-                                      skip = 1)
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_TableNormalization, overwrite = TRUE)
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Meta Data: Tables
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_Tables <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                          sheet = "Tables")
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_Tables, overwrite = TRUE)
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Settings: TransformativeExpressions (used in Data Harmonization)
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_TransformativeExpressions <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                                             sheet = "TransformativeExpressions",
-                                             skip = 1)
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_TransformativeExpressions, overwrite = TRUE)
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Meta Data: Values
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Meta_Values <- read_excel(path = "./Development/Data/MetaData/MetaData.xlsx",
-                          sheet = "Values",
-                          skip = 1)
-
-# Save data in .rda-file and make it part of package
-use_data(Meta_Values, overwrite = TRUE)
+use_data(Res.ICD10Codes, overwrite = TRUE)
 
 
 
@@ -171,10 +111,18 @@ use_data(Meta_Values, overwrite = TRUE)
 # Disclosure Settings
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-DisclosureSettings <- list(Profile = "loose",     # Optional: 'strict', 'loose'
-                           NThreshold = 5)
+DisclosureSettings.FredaP21 <- list(Profile = "loose",     # Optional: 'strict', 'loose'
+                                    NThreshold = 5)
 
 # Save data in .rda-file and make it part of package
-use_data(DisclosureSettings, overwrite = TRUE)
+use_data(DisclosureSettings.FredaP21, overwrite = TRUE)
+
+
+
+
+
+
+
+
 
 
