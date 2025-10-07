@@ -1,11 +1,11 @@
 
-#' DrawSampleDS
+#' P21.DrawSampleDS
 #'
 #' Draws a sample (subset) from Raw Data Set
 #'
 #' Server-side ASSIGN method
 #'
-#' @param RawDataSetName.S \code{string} - Name of Raw Data Set object (list) on server - Default: 'RawDataSet'
+#' @param RawDataSetName.S \code{string} - Name of Raw Data Set object (list) on server - Default: 'P21.RawDataSet'
 #' @param SampleSize.S \code{count} - Number of patients in sample
 #'
 #' @return A \code{list} containing a subset of Raw Data Set
@@ -13,8 +13,8 @@
 #'
 #' @author Bastian Reiter
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-DrawSampleDS <- function(RawDataSetName.S = "RawDataSet",
-                         SampleSize.S = 100)
+P21.DrawSampleDS <- function(RawDataSetName.S = "P21.RawDataSet",
+                             SampleSize.S = 100)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {
   require(assertthat)

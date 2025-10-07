@@ -6,12 +6,12 @@ library(dplyr)
 # Load P21 data as raw data set
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
+P21.RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
 #RawDataSetProc <- readRDS(file = "./Development/Data/RealData/RawDataSet_PreProcessed.rds")
 
 
-RawDataSet <- PrepareRawDataSetDS(RawDataSetName.S = "RawDataSet",
-                                  FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
+P21.RawDataSet <- PrepareRawDataSetDS(RawDataSetName.S = "P21.RawDataSet",
+                                      FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
 
 
 
@@ -19,7 +19,7 @@ RawDataSet <- PrepareRawDataSetDS(RawDataSetName.S = "RawDataSet",
 # Check Tables for existence and completeness
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "RawDataSet",
+RDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "P21.RawDataSet",
                                    Module.S = "P21",
                                    Stage.S = "Raw")
 
@@ -28,23 +28,23 @@ RDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "RawDataSet",
 # OPTIONAL: Draw sample from Raw Data Set
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RawDataSet <- DrawSampleDS(RawDataSetName.S = "RawDataSet",
-                           SampleSize.S = 5000)
+P21.RawDataSet <- DrawSampleDS(RawDataSetName.S = "P21.RawDataSet",
+                               SampleSize.S = 5000)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Curate data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CurationOutput <- CurateDataDS(RawDataSetName.S = "RawDataSet",
-                               Settings.S = list(DataHarmonization = list(Run = TRUE,
-                                                                          Profile = "Default"),
-                                                 FeatureObligations = list(Profile = "Default"),
-                                                 FeatureTracking = list(Profile = "Default"),
-                                                 TableCleaning = list(Run = TRUE)))
+CurationOutput <- P21.CurateDataDS(RawDataSetName.S = "P21.RawDataSet",
+                                   Settings.S = list(DataHarmonization = list(Run = TRUE,
+                                                                              Profile = "Default"),
+                                                     FeatureObligations = list(Profile = "Default"),
+                                                     FeatureTracking = list(Profile = "Default"),
+                                                     TableCleaning = list(Run = TRUE)))
 
-CuratedDataSet <- CurationOutput$CuratedDataSet
+P21.CuratedDataSet <- CurationOutput$CuratedDataSet
 
-CDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "CuratedDataSet",
+CDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "P21.CuratedDataSet",
                                    Module.S = "P21",
                                    Stage.S = "Curated")
 
@@ -53,42 +53,13 @@ CDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "CuratedDataSet",
 # Augment data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-AugmentationOutput <- dsFredaP21::AugmentDataDS(CuratedDataSetName.S = "CuratedDataSet")
+AugmentationOutput <- dsFredaP21::AugmentDataDS(CuratedDataSetName.S = "P21.CuratedDataSet")
 
 ADS <- AugmentationOutput$AugmentedDataSet
 
 ADSTableCheck <- GetDataSetCheckDS(DataSetName.S = "ADS")
 
 
-
-ADS_Patient <- ADS$Patient
-ADS_Diagnosis <- ADS$Diagnosis
-
-
-ADS_Patient <- ADS_Patient %>%
-                    filter(CountDiagnoses == 1)
-
-
-Analysis <- JoinTablesDS(TableNameA.S = "ADS_Patient",
-                         TableNameB.S = "ADS_Diagnosis",
-                         ByStatement.S = "PatientID")
-
-#
-#
-# SampleStatistics <- GetSampleStatisticsDS(TableName.S = "ADS$Patients",
-#                                           FeatureName.S = "LastVitalStatus")
-# SampleStatistics$Statistics
-
-
-
-
-
-Test <- Analysis %>%
-            filter(str_starts(ICD10Code, "C34") == TRUE)
-
-
-
-str_starts(Analysis$ICD10Code, "C50")
 
 
 
