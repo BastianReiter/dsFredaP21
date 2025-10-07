@@ -1,7 +1,7 @@
 AggregateMethods:
-    GetCohortDescriptionDS,
+    P21.GetCohortDescriptionDS,
 AssignMethods:
-    AugmentDataDS,
-    CurateDataDS,
-    DrawSampleDS,
-    MatchDataDS
+    P21.AugmentDataDS,
+    P21.CurateDataDS,
+    P21.DrawSampleDS,
+    P21.PrepareRawDataSetDS
