@@ -1,12 +1,12 @@
 
-#' AugmentDataDS
+#' P21.AugmentDataDS
 #'
 #' `r lifecycle::badge("stable")` \cr\cr
 #' Transforms Curated Data Set (CDS) into Augmented Data Set (ADS)
 #'
 #' Server-side ASSIGN method
 #'
-#' @param CuratedDataSetName.S \code{character} - Name of the Curated Data Set object on server - Default: 'CuratedDataSet'
+#' @param CuratedDataSetName.S \code{character} - Name of the Curated Data Set object on server - Default: 'P21.CuratedDataSet'
 #' @param Settings.S \code{list} - Settings passed to function
 #'                   \itemize{\item EventFeatures \code{list}
 #'                                \itemize{\item RuleSet \code{data.frame} - Default: \code{dsCCPhos::Meta_EventFeatures}
@@ -24,9 +24,9 @@
 #' @export
 #' @author Bastian Reiter
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-AugmentDataDS <- function(CuratedDataSetName.S = "CuratedDataSet",
-                          Settings.S = list(CreateSubsets = list(Cancer = TRUE,
-                                                                 HIVCancer = FALSE)))
+P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
+                              Settings.S = list(CreateSubsets = list(Cancer = TRUE,
+                                                                     HIVCancer = FALSE)))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

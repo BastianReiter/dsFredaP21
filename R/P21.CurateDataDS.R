@@ -1,12 +1,12 @@
 
-#' CurateDataDS
+#' P21.CurateDataDS
 #'
 #' `r lifecycle::badge("stable")` \cr\cr
 #' Transforms CCP Raw Data Set (RDS) into Curated Data Set (CDS) while tracing data transformation.
 #'
 #' Server-side ASSIGN method
 #'
-#' @param RawDataSetName.S \code{character} - Name of Raw Data Set object (list) on server - Default: 'RawDataSet'
+#' @param RawDataSetName.S \code{character} - Name of Raw Data Set object (list) on server - Default: 'P21.RawDataSet'
 #' @param Settings.S \code{list} - Settings passed to function
 #'                   \itemize{  \item \emph{DataHarmonization} - \code{list}
 #'                                  \itemize{ \item Run \code{logical} - Whether or not to perform data harmonization - Default: \code{TRUE}
@@ -66,43 +66,43 @@
 #' @export
 #' @author Bastian Reiter
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CurateDataDS <- function(RawDataSetName.S = "RawDataSet",
-                         Settings.S = list(DataHarmonization = list(Run = TRUE,
-                                                                    Process = dsFredaP21::Set.DataHarmonization,
-                                                                    Process.Profile = "Default",
-                                                                    TransformativeExpressions = dsFredaP21::Set.TransformativeExpressions,
-                                                                    TransformativeExpressions.Profile = "Default",
-                                                                    Dictionary = dsFredaP21::Set.Dictionary,
-                                                                    Dictionary.Profile = "Default",
-                                                                    FuzzyStringMatching = dsFredaP21::Set.FuzzyStringMatching,
-                                                                    FuzzyStringMatching.Profile = "Default",
-                                                                    ExcludeIneligibleValues = TRUE),
-                                          FeatureObligations = list(RuleSet = dsFredaP21::Set.FeatureObligations,
-                                                                    RuleSet.Profile = "Default"),
-                                          FeatureTracking = list(RuleSet = dsFredaP21::Set.FeatureTracking,
-                                                                 RuleSet.Profile = "Default"),
-                                          TableCleaning = list(Run = TRUE),
-                                          TableNormalization = list(Run = TRUE,
-                                                                    RuleSet = dsFredaP21::Proc.TableNormalization,
-                                                                    RuleSet.Profile = "Default")),
-                         DataHarmonization.Run = NULL,
-                         DataHarmonization.Process = NULL,
-                         DataHarmonization.Process.Profile = NULL,
-                         DataHarmonization.TransformativeExpressions = NULL,
-                         DataHarmonization.TransformativeExpressions.Profile = NULL,
-                         DataHarmonization.Dictionary = NULL,
-                         DataHarmonization.Dictionary.Profile = NULL,
-                         DataHarmonization.FuzzyStringMatching = NULL,
-                         DataHarmonization.FuzzyStringMatching.Profile = NULL,
-                         DataHarmonization.ExcludeIneligibleValues = NULL,
-                         FeatureObligations.RuleSet = NULL,
-                         FeatureObligations.RuleSet.Profile = NULL,
-                         FeatureTracking.RuleSet = NULL,
-                         FeatureTracking.RuleSet.Profile = NULL,
-                         TableCleaning.Run = NULL,
-                         TableNormalization.Run = NULL,
-                         TableNormalization.RuleSet = NULL,
-                         TableNormalization.RuleSet.Profile = NULL)
+P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
+                             Settings.S = list(DataHarmonization = list(Run = TRUE,
+                                                                        Process = dsFredaP21::Set.DataHarmonization,
+                                                                        Process.Profile = "Default",
+                                                                        TransformativeExpressions = dsFredaP21::Set.TransformativeExpressions,
+                                                                        TransformativeExpressions.Profile = "Default",
+                                                                        Dictionary = dsFredaP21::Set.Dictionary,
+                                                                        Dictionary.Profile = "Default",
+                                                                        FuzzyStringMatching = dsFredaP21::Set.FuzzyStringMatching,
+                                                                        FuzzyStringMatching.Profile = "Default",
+                                                                        ExcludeIneligibleValues = TRUE),
+                                              FeatureObligations = list(RuleSet = dsFredaP21::Set.FeatureObligations,
+                                                                        RuleSet.Profile = "Default"),
+                                              FeatureTracking = list(RuleSet = dsFredaP21::Set.FeatureTracking,
+                                                                     RuleSet.Profile = "Default"),
+                                              TableCleaning = list(Run = TRUE),
+                                              TableNormalization = list(Run = TRUE,
+                                                                        RuleSet = dsFredaP21::Proc.TableNormalization,
+                                                                        RuleSet.Profile = "Default")),
+                             DataHarmonization.Run = NULL,
+                             DataHarmonization.Process = NULL,
+                             DataHarmonization.Process.Profile = NULL,
+                             DataHarmonization.TransformativeExpressions = NULL,
+                             DataHarmonization.TransformativeExpressions.Profile = NULL,
+                             DataHarmonization.Dictionary = NULL,
+                             DataHarmonization.Dictionary.Profile = NULL,
+                             DataHarmonization.FuzzyStringMatching = NULL,
+                             DataHarmonization.FuzzyStringMatching.Profile = NULL,
+                             DataHarmonization.ExcludeIneligibleValues = NULL,
+                             FeatureObligations.RuleSet = NULL,
+                             FeatureObligations.RuleSet.Profile = NULL,
+                             FeatureTracking.RuleSet = NULL,
+                             FeatureTracking.RuleSet.Profile = NULL,
+                             TableCleaning.Run = NULL,
+                             TableNormalization.Run = NULL,
+                             TableNormalization.RuleSet = NULL,
+                             TableNormalization.RuleSet.Profile = NULL)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {
 

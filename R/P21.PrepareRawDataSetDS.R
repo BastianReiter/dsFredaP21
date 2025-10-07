@@ -1,19 +1,19 @@
 
-#' PrepareRawDataSetDS
+#' P21.PrepareRawDataSetDS
 #'
 #' Load
 #'
 #' Server-side ASSIGN method
 #'
-#' @param RawDataSetName.S \code{string} - Name of Raw Data Set object (list) on server - Default: 'RawDataSet'
+#' @param RawDataSetName.S \code{string} - Name of Raw Data Set object (list) on server - Default: 'P21.RawDataSet'
 #'
 #' @return A \code{list} containing a subset of Raw Data Set
 #' @export
 #'
 #' @author Bastian Reiter
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-PrepareRawDataSetDS <- function(RawDataSetName.S = "RawDataSet",
-                                FeatureNameDictionary.S = list())
+P21.PrepareRawDataSetDS <- function(RawDataSetName.S = "P21.RawDataSet",
+                                    FeatureNameDictionary.S = list())
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {
   require(assertthat)
