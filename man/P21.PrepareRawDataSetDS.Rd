@@ -11,12 +11,16 @@ P21.PrepareRawDataSetDS(
 }
 \arguments{
 \item{RawDataSetName.S}{\code{string} - Name of Raw Data Set object (list) on server - Default: 'P21.RawDataSet'}
+
+\item{FeatureNameDictionary.S}{Optional \code{list} containing dictionary data for feature name harmonization (Form: \code{list(Department = c(FAB = "Fachabteilung"))})}
 }
 \value{
-A \code{list} containing a subset of Raw Data Set
+A \code{list} containing
+\itemize{ \item The input RawDataSet (\code{list}) with harmonized feature names
+\item Messages (\code{character vector}) }
 }
 \description{
-Load
+Try to harmonize feature names in RDS tables (prior to data curation) employing Fuzzy String Matching and Dictionary look-up.
 }
 \details{
 Server-side ASSIGN method

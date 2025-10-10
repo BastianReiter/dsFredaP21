@@ -62,8 +62,10 @@
 #'                                    \itemize{ \item Monitors
 #'                                              \item EligibilityOverviews
 #'                                              \item ValueSetOverviews}}
-#'                  \item CurationMessages \code{list}}
+#'                  \item Messages \code{list}}
+#'
 #' @export
+#'
 #' @author Bastian Reiter
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
@@ -157,17 +159,6 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
 #     - Curation Messages (list)
 #
 #===============================================================================
-
-  require(assertthat)
-  require(dplyr)
-  require(dsFreda)
-  require(lubridate)
-  require(progress)
-  require(purrr)
-  require(rlang)
-  require(stats)
-  require(stringr)
-  require(tidyr)
 
   # --- For Testing Purposes ---
   # DataSet <- RawDataSet
@@ -1332,10 +1323,10 @@ try(ProgressBar$tick())
 # Using dsFreda::FindRedundantEntries(), mark redundant entries in table 'Case' for further processing
 Aux_DiagnosisRedundancies <- DataSet$Case %>%
                                   dsFreda::FindRedundantEntries(PrimaryKeyFeature = "CasePseudonym",
-                                                                DiscriminatoryFeatures = Meta.Features %>%
+                                                                DiscriminatoryFeatures = dsFredaP21::Meta.Features %>%
                                                                                              filter(TableName.Curated == "Case", IsDiscriminatory == TRUE) %>%
                                                                                              pull(FeatureName.Curated),
-                                                                EssentialFeatures = Meta.Features %>%
+                                                                EssentialFeatures = dsFredaP21::Meta.Features %>%
                                                                                          filter(TableName.Curated == "Case", IsEssential == TRUE) %>%
                                                                                          pull(FeatureName.Curated),
                                                                 RemoveRedundantEntries = FALSE)
@@ -1373,13 +1364,13 @@ DataSet <- DataSet %>%
 
                             # ... then proceed with secondary redundancy removal
                             Table <- Table %>%
-                                          dsFreda::FindRedundantEntries(PrimaryKeyFeature = Meta.Features %>%
+                                          dsFreda::FindRedundantEntries(PrimaryKeyFeature = dsFredaP21::Meta.Features %>%
                                                                                                  filter(TableName.Curated == tablename, IsPrimaryKey == TRUE) %>%
                                                                                                  pull(FeatureName.Curated),
-                                                                        DiscriminatoryFeatures = Meta.Features %>%
+                                                                        DiscriminatoryFeatures = dsFredaP21::Meta.Features %>%
                                                                                                      filter(TableName.Curated == tablename, IsDiscriminatory == TRUE) %>%
                                                                                                      pull(FeatureName.Curated),
-                                                                        EssentialFeatures = Meta.Features %>%
+                                                                        EssentialFeatures = dsFredaP21::Meta.Features %>%
                                                                                                  filter(TableName.Curated == tablename, IsEssential == TRUE) %>%
                                                                                                  pull(FeatureName.Curated),
                                                                         RemoveRedundantEntries = TRUE)
@@ -1479,7 +1470,7 @@ try(ProgressBar$terminate())
   #   # Return the Curated Data Set (CDS) a Curation Report (defined above) and Messages
     return(list(CuratedDataSet = DataSet,
                 CurationReport = CurationReport,
-                CurationMessages = Messages))
+                Messages = Messages))
   # })
 
 }

@@ -8,20 +8,24 @@
 #'
 #' @param CuratedDataSetName.S \code{character} - Name of the Curated Data Set object on server - Default: 'P21.CuratedDataSet'
 #' @param Settings.S \code{list} - Settings passed to function
-#'                   \itemize{\item EventFeatures \code{list}
-#'                                \itemize{\item RuleSet \code{data.frame} - Default: \code{dsCCPhos::Meta_EventFeatures}
-#'                                         \item Profile \code{character} - Profile name defining rule set to be used for event feature engineering. Profile name must be stated in \code{EventFeatures$RuleSet} - Default: 'Default'}}
+#'                   \itemize{\item CreateSubsets \code{list}
+#'                                \itemize{\item Cancer \code{logical} - Default: \code{TRUE}
+#'                                         \item HIVCancer \code{logical} - Default: \code{FALSE}}}
 #'
 #' @return A \code{list} containing the following objects:
 #'         \itemize{\item AugmentedDataSet \code{list}
-#'                      \itemize{\item Events
-#'                               \item DiseaseCourse
-#'                               \item Therapy
-#'                               \item Diagnosis
-#'                               \item Patient}
+#'                      \itemize{\item Case \code{data.frame}
+#'                               \item Diagnosis \code{data.frame}
+#'                               \item Events \code{data.frame}
+#'                               \item Patient \code{data.frame}
+#'                               \item PatientCancer \code{data.frame}
+#'                               \item PatientHIVCancer \code{data.frame}
+#'                               \item Procedures \code{data.frame} }
 #'                  \item AugmentationReport \code{list}
-#'                  \item AugmentationMessages \code{list}}
+#'                  \item Messages \code{list}}
+#'
 #' @export
+#'
 #' @author Bastian Reiter
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
@@ -36,18 +40,6 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #   SETUP
 #   ...
 #===============================================================================
-
-  require(assertthat)
-  require(dplyr)
-  require(dsFreda)
-  require(lubridate)
-  require(progress)
-  require(purrr)
-  require(rlang)
-  # require(slider)
-  require(stats)
-  require(stringr)
-  require(tidyr)
 
   # --- For Testing Purposes ---
   # CDS <- CuratedDataSet
@@ -144,6 +136,13 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #                      _____________
 #                     / ADS$Patient \
 #                     \_____________/
+#                     --- Optional -------------
+#                      ___________________
+#                     / ADS$PatientCancer \
+#                     \___________________/
+#                      ______________________
+#                     / ADS$PatientHIVCancer \
+#                     \______________________/
 
 
 
@@ -243,8 +242,8 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                       -DepartmentIsPseudo,
                                       -DepartmentAdmissionDate,
                                       -DepartmentDischargeDate))) %>%
-                        mutate(HasStayedWithoutPause = (DepartmentAdmissionDate == tidytable::lag(DepartmentDischargeDate, default = as_date(0))),      # Check: DepartmentAdmissionDate == Previous DepartmentDischargeDate ?
-                               WillStayWithoutPause = (DepartmentDischargeDate == tidytable::lead(DepartmentAdmissionDate, default = as_date(0))))      # Check: DepartmentDischargeDate == Next DepartmentAdmissionDate ?
+                        mutate(HasStayedWithoutPause = (DepartmentAdmissionDate == tidytable::lag(DepartmentDischargeDate, default = lubridate::as_date(0))),      # Check: DepartmentAdmissionDate == Previous DepartmentDischargeDate ?
+                               WillStayWithoutPause = (DepartmentDischargeDate == tidytable::lead(DepartmentAdmissionDate, default = lubridate::as_date(0))))      # Check: DepartmentDischargeDate == Next DepartmentAdmissionDate ?
                     #=== Update Progress Bar ===
                     try(ProgressBar$tick())
 
@@ -676,7 +675,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                DepartmentCode,
                                Department,
                                OperatingSpecialty)) %>%
-                        mutate(EventDate = as_date(ifelse(EventClass == "Diagnosis",
+                        mutate(EventDate = lubridate::as_date(ifelse(EventClass == "Diagnosis",
                                                           EventDate[EventSubclass == "Admission"],
                                                           EventDate))) %>%
                         arrange(PatientPseudonym, CasePseudonym, EventDate)
@@ -961,13 +960,13 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
   ADS$Events <- ADS$Events %>%
                     group_by(PatientPseudonym) %>%
                         arrange(EventDate, EventClass, .by_group = TRUE) %>%
-                        mutate(LastSurgeryDate = as_date(ifelse(EventSubclass == "Surgery",
+                        mutate(LastSurgeryDate = lubridate::as_date(ifelse(EventSubclass == "Surgery",
                                                                     EventDate,
                                                                     NA)),
-                               LastChemotherapyDate = as_date(ifelse(EventSubclass == "Chemotherapy",
+                               LastChemotherapyDate = lubridate::as_date(ifelse(EventSubclass == "Chemotherapy",
                                                                          EventDate,
                                                                          NA)),
-                               LastChemotherapyDate_NonICU = as_date(ifelse(EventSpecification.A %in% c("ChemotherapyNonICU", "ChemotherapyUnknown"),
+                               LastChemotherapyDate_NonICU = lubridate::as_date(ifelse(EventSpecification.A %in% c("ChemotherapyNonICU", "ChemotherapyUnknown"),
                                                                                 EventDate,
                                                                                 NA))) %>%
                         fill(LastSurgeryDate,
@@ -1027,24 +1026,24 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
   Aux.PatientSummaries.Events <- ADS$Events %>%
                                         group_by(PatientPseudonym) %>%
-                                        summarize(PresumedMainCancerDiagnosisDate = as_date(ifelse(any(EventSpecification.A == "Main Cancer Diagnosis"),
+                                        summarize(PresumedMainCancerDiagnosisDate = lubridate::as_date(ifelse(any(EventSpecification.A == "Main Cancer Diagnosis"),
                                                                                                        EventDate[EventSpecification.A == "Main Cancer Diagnosis"],
                                                                                                        NA)),
                                                   PresumedMainCancerIsLikelyFirstDiagnosis = any(EventSpecification.C == "Likely First Diagnosis"),
-                                                  PresumedMainCancerFirstDiagnosisDate = as_date(ifelse(any(EventSpecification.C == "Likely First Diagnosis"),
+                                                  PresumedMainCancerFirstDiagnosisDate = lubridate::as_date(ifelse(any(EventSpecification.C == "Likely First Diagnosis"),
                                                                                                             EventDate[EventSpecification.C == "Likely First Diagnosis"],
                                                                                                             NA)),
-                                                  PresumedMetastasisDiagnosisDate = as_date(ifelse(any(EventSpecification.A == "Metastasis Diagnosis"),
+                                                  PresumedMetastasisDiagnosisDate = lubridate::as_date(ifelse(any(EventSpecification.A == "Metastasis Diagnosis"),
                                                                                                        EventDate[EventSpecification.A == "Metastasis Diagnosis"],
                                                                                                        NA)),
-                                                  PresumedHIVDiagnosisDate = as_date(ifelse(any(EventSpecification.A == "HIV Diagnosis"),
+                                                  PresumedHIVDiagnosisDate = lubridate::as_date(ifelse(any(EventSpecification.A == "HIV Diagnosis"),
                                                                                                 EventDate[EventSpecification.A == "HIV Diagnosis"],
                                                                                                 NA)),
-                                                  PresumedAIDSDiagnosisDate = as_date(ifelse(any(EventSpecification.A == "AIDS Diagnosis"),
+                                                  PresumedAIDSDiagnosisDate = lubridate::as_date(ifelse(any(EventSpecification.A == "AIDS Diagnosis"),
                                                                                                  EventDate[EventSpecification.A == "AIDS Diagnosis"],
                                                                                                  NA)),
                                                   #-------------------------------
-                                                  FirstRelevantAdmissionDate = as_date(ifelse(sum(EventSpecification.A == "Main Cancer Diagnosis") == 0 &
+                                                  FirstRelevantAdmissionDate = lubridate::as_date(ifelse(sum(EventSpecification.A == "Main Cancer Diagnosis") == 0 &
                                                                                                     sum(EventSpecification.A == "HIV Diagnosis") == 0,      # If patient holds no main cancer or HIV diagnosis
                                                                                                   min(EventDate[EventSubclass == "Admission"], na.rm = TRUE),      # Then take the first admission date as value
                                                                                                   min(PresumedMainCancerDiagnosisDate, PresumedHIVDiagnosisDate, na.rm = TRUE))),
@@ -1058,7 +1057,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                                   TotalDocumentedTimeSpan = ceiling(as.numeric(difftime(max(EventDate), min(EventDate), units = "days")) + 1),
                                                   RelevantDocumentedTimeSpan = ceiling(as.numeric(difftime(max(EventDate), min(PresumedMainCancerDiagnosisDate, PresumedHIVDiagnosisDate), units = "days")) + 1),
                                                   #-------------------------------
-                                                  MainCancerFirstStay.TimeToFirstNonSurgicalTherapy = round(min(c(100000, as.numeric(difftime(as_date(EventDate[EventSubclass %in% c("Chemotherapy",
+                                                  MainCancerFirstStay.TimeToFirstNonSurgicalTherapy = round(min(c(100000, as.numeric(difftime(lubridate::as_date(EventDate[EventSubclass %in% c("Chemotherapy",
                                                                                                                                                                                          "Immunotherapy",
                                                                                                                                                                                          "Radiotherapy",
                                                                                                                                                                                          "Nuclear Medicine Therapy",
@@ -1154,13 +1153,13 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
 
 #===============================================================================
-# PATIENT SUBSET ADS$PatientsCancer: Only patients with cancer
+# PATIENT SUBSET ADS$PatientCancer: Only patients with cancer
 #===============================================================================
 
 if (Settings$CreateSubsets$Cancer == TRUE)
 {
 
-  ADS$PatientsCancer <- ADS$Patients %>%
+  ADS$PatientCancer <- ADS$Patients %>%
                             filter(PatientHoldsMainCancerDiagnosis == TRUE)
 
 
@@ -1169,7 +1168,7 @@ if (Settings$CreateSubsets$Cancer == TRUE)
 #===============================================================================
 
   Aux.CancerPatientSummaries.Progress <- ADS$Events %>%
-                                              filter(PatientPseudonym %in% ADS$PatientsCancer$PatientPseudonym) %>%
+                                              filter(PatientPseudonym %in% ADS$PatientCancer$PatientPseudonym) %>%
                                               group_by(PatientPseudonym) %>%
                                                   summarize(HadAnyCancerTherapy = any(str_starts(EventSpecification.A, "CancerSurgery")) |
                                                                                     any(EventSubclass %in% c("Chemotherapy",
@@ -1193,30 +1192,30 @@ if (Settings$CreateSubsets$Cancer == TRUE)
                                                             HadBoneMarrowTransplant = any(EventSubclass == "Bone Marrow Transplant"),
                                                             HadPotentialCARTCellTherapy = any(EventSubclass == "Potential CAR-T-Cell Therapy"),
                                                             #-------------------
-                                                            DateFirstCancerSurgery = as.Date(as_date(ifelse(any(EventSpecification.A %in% c("CancerSurgery.CurativeIntention.Primary",
+                                                            DateFirstCancerSurgery = as.Date(lubridate::as_date(ifelse(any(EventSpecification.A %in% c("CancerSurgery.CurativeIntention.Primary",
                                                                                                                           "CancerSurgery.CurativeIntention.Secondary",
                                                                                                                           "CancerSurger_Supportive")),
                                                                                                          min(EventDate[str_starts(EventSpecification.A, "CancerSurgery")], na.rm = TRUE),
                                                                                                          NA))),
-                                                            DateFirstChemotherapy = as.Date(as_date(ifelse(HadChemotherapy == TRUE,
+                                                            DateFirstChemotherapy = as.Date(lubridate::as_date(ifelse(HadChemotherapy == TRUE,
                                                                                                         min(EventDate[EventSubclass == "Chemotherapy"], na.rm = TRUE),
                                                                                                         NA))),
-                                                            DateFirstImmunotherapy = as.Date(as_date(ifelse(HadImmunotherapy == TRUE,
+                                                            DateFirstImmunotherapy = as.Date(lubridate::as_date(ifelse(HadImmunotherapy == TRUE,
                                                                                                          min(EventDate[EventSubclass == "Immunotherapy"], na.rm = TRUE),
                                                                                                          NA))),
-                                                            DateFirstRadiotherapy = as.Date(as_date(ifelse(HadRadiotherapy == TRUE,
+                                                            DateFirstRadiotherapy = as.Date(lubridate::as_date(ifelse(HadRadiotherapy == TRUE,
                                                                                                         min(EventDate[EventSubclass == "Radiotherapy"], na.rm = TRUE),
                                                                                                         NA))),
-                                                            DateFirstNuclearmedTherapy = as.Date(as_date(ifelse(HadNuclearmedTherapy == TRUE,
+                                                            DateFirstNuclearmedTherapy = as.Date(lubridate::as_date(ifelse(HadNuclearmedTherapy == TRUE,
                                                                                                              min(EventDate[EventSubclass == "Nuclear Medicine Therapy"], na.rm = TRUE),
                                                                                                              NA))),
-                                                            DateFirstStemCellTherapy = as.Date(as_date(ifelse(HadStemCellTherapy == TRUE,
+                                                            DateFirstStemCellTherapy = as.Date(lubridate::as_date(ifelse(HadStemCellTherapy == TRUE,
                                                                                                            min(EventDate[EventSubclass == "Stem Cell Therapy"], na.rm = TRUE),
                                                                                                            NA))),
-                                                            DateFirstBoneMarrowTransplant = as.Date(as_date(ifelse(HadBoneMarrowTransplant == TRUE,
+                                                            DateFirstBoneMarrowTransplant = as.Date(lubridate::as_date(ifelse(HadBoneMarrowTransplant == TRUE,
                                                                                                                      min(EventDate[EventSubclass == "Bone Marrow Transplant"], na.rm = TRUE),
                                                                                                                      NA))),
-                                                            DateFirstPotentialCARTCellTherapy = as.Date(as_date(ifelse(HadPotentialCARTCellTherapy == TRUE,
+                                                            DateFirstPotentialCARTCellTherapy = as.Date(lubridate::as_date(ifelse(HadPotentialCARTCellTherapy == TRUE,
                                                                                                                     min(EventDate[EventSubclass == "Potential CAR-T-Cell Therapy"], na.rm = TRUE),
                                                                                                                     NA))),
                                                             #-------------------
@@ -1224,7 +1223,7 @@ if (Settings$CreateSubsets$Cancer == TRUE)
                                                             HadComplication_Ventilation = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "Ventilation"),
                                                             HadComplication_Dialysis = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "Dialysis"),
                                                             HadComplication_TransferICU = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "TransferICU"),
-                                                            DateFirstComplicationAfterChemo = as.Date(as_date(ifelse(any(IsFirstPotentialComplication_AcrossCases == TRUE),
+                                                            DateFirstComplicationAfterChemo = as.Date(lubridate::as_date(ifelse(any(IsFirstPotentialComplication_AcrossCases == TRUE),
                                                                                                                          EventDate[IsFirstPotentialComplication_AcrossCases == TRUE],
                                                                                                                          NA))),
                                                             TimeChemoToFirstComplication = ifelse(HadComplicationAfterChemo == TRUE,
@@ -1303,13 +1302,13 @@ if (Settings$CreateSubsets$Cancer == TRUE)
 
 
 #===============================================================================
-# ADS$PatientsCancer
+# ADS$PatientCancer
 #===============================================================================
 #   - Join all previously created Patient Summaries
 #   - Add Subgrouping of relation between cancer entity and HIV, regardless of actual HIV status
 #-------------------------------------------------------------------------------
 
-  ADS$PatientsCancer <- ADS$PatientsCancer %>%
+  ADS$PatientCancer <- ADS$PatientCancer %>%
                             left_join(Aux.CancerPatientSummaries.Progress, by = join_by(PatientPseudonym)) %>%
                             left_join(Aux.CancerPatientSummaries.TherapySequence, by = join_by(PatientPseudonym)) %>%
                             mutate(PatientSubgroupHIVCancerCategory = case_when(MainCancerIsAD == TRUE ~ "HIV-associated AD cancer",
@@ -1320,7 +1319,7 @@ if (Settings$CreateSubsets$HIVCancer)
 {
 
 #===============================================================================
-# SUBSET ADS$PatientsHIVCancer: Patients with presumed HIV and cancer
+# SUBSET ADS$PatientHIVCancer: Patients with presumed HIV and cancer
 #===============================================================================
 # Add variable regarding order of presumed HIV and cancer diagnosis:
 #     - HIV before cancer
@@ -1341,7 +1340,7 @@ if (Settings$CreateSubsets$HIVCancer)
 #     - Patients with cancer without AIDS
 #-------------------------------------------------------------------------------
 
-  ADS$PatientsHIVCancer <- ADS$PatientsCancer %>%
+  ADS$PatientHIVCancer <- ADS$PatientCancer %>%
                                   filter(PatientHoldsHIVCodes == TRUE) %>%
                                   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                   mutate(HIVCancerDiagnosisOrder = case_when(PresumedHIVDiagnosisDate < PresumedMainCancerDiagnosisDate ~ "HIV before cancer",
@@ -1372,7 +1371,7 @@ if (Settings$CreateSubsets$HIVCancer)
                                   try(ProgressBar$tick())
 
 
-  vc_HIVCancerCategory <- unique(ADS$PatientsHIVCancer$HIVCancerCategory)
+  vc_HIVCancerCategory <- unique(ADS$PatientHIVCancer$HIVCancerCategory)
   names(vc_HIVCancerCategory) <- vc_HIVCancerCategory
 
 
@@ -1388,7 +1387,7 @@ if (Settings$CreateSubsets$HIVCancer)
 # ... and all combinations
 #-------------------------------------------------------------------------------
 
-  Aux.HIVCancerPatientSummaries.HIVCancerSequence <- ADS$PatientsHIVCancer %>%
+  Aux.HIVCancerPatientSummaries.HIVCancerSequence <- ADS$PatientHIVCancer %>%
                                                             select(PatientPseudonym,
                                                                    PresumedMainCancerDiagnosisDate,
                                                                    PresumedMetastasisDiagnosisDate,
@@ -1422,12 +1421,12 @@ if (Settings$CreateSubsets$HIVCancer)
 
 
 #===============================================================================
-# ADS$PatientsHIVCancer
+# ADS$PatientHIVCancer
 #===============================================================================
 #   - Add Diagnosis Sequence
 #-------------------------------------------------------------------------------
 
-  ADS$PatientsHIVCancer <- ADS$PatientsHIVCancer %>%
+  ADS$PatientHIVCancer <- ADS$PatientHIVCancer %>%
                                 left_join(df_Aux_HIVCancerPatientSummaries_HIVCancerSequence, by = join_by(PatientPseudonym)) %>%
                                 ungroup()
                                 #=== Update Progress Bar ===
@@ -1503,7 +1502,7 @@ if (Settings$CreateSubsets$HIVCancer)
   #   # Return the Augmented Data Set (ADS), an Augmentation Report (defined above) and Messages
     return(list(AugmentedDataSet = ADS,
                 AugmentationReport = ls_AugmentationReport,
-                AugmentationMessages = Messages))
+                Messages = Messages))
   # })
 
 }

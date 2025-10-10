@@ -2,7 +2,7 @@
 
 #===============================================================================
 #
-# dsP21Curator Package DEVELOPMENT TRACKER
+# dsFredaP21 Package DEVELOPMENT TRACKER
 #
 #===============================================================================
 
@@ -28,23 +28,35 @@ library(devtools)
 # Adding package dependencies using usethis::use_package()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# use_package("cli")
-# use_package("dplyr")
-# use_package("DSI")
-# use_package("DSOpal")
-# use_package("lubridate")
-# use_package("MatchIt")
-# use_package("progress")
-# use_package("readr", type = "Suggests")
-# use_package("readxl", type = "Suggests")
-# use_package("resourcer", type = "Suggests")
-# use_package("rlang")
-# use_package("stats")
-# use_package("stringdist")
-# use_package("stringr")
-# use_package("survival")
-# use_package("tibble")
-# use_package("tidyr")
-# use_package("validate")
+use_package("assertthat")
+use_package("cli")
+use_package("comorbidity")
+use_package("dplyr")
+use_package("ICD10gm")
+use_package("lifecycle")
+use_package("lubridate")
+use_package("purrr")
+use_package("resourcer")
+use_package("rlang")
+use_package("stats")
+use_package("stringr")
+use_package("tibble")
+use_package("tidyr")
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Package documentation and import settings
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Set up central roxygen "script"
+#-------------------------------------------------------------------------------
+# use_package_doc()
+
+# Use the %>%-operator in this package (not enough to import dplyr)
+#-------------------------------------------------------------------------------
+# use_pipe(export = FALSE)
+
+# Use specific functions from external packages
+#-------------------------------------------------------------------------------
+# use_import_from("progress", "progress_bar")
 

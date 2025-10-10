@@ -9,6 +9,7 @@
 #' @param SampleSize.S \code{count} - Number of patients in sample
 #'
 #' @return A \code{list} containing a subset of Raw Data Set
+#'
 #' @export
 #'
 #' @author Bastian Reiter
@@ -17,10 +18,6 @@ P21.DrawSampleDS <- function(RawDataSetName.S = "P21.RawDataSet",
                              SampleSize.S = 100)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {
-  require(assertthat)
-  require(dplyr)
-  require(purrr)
-
   # --- Argument Validation ---
   assert_that(is.string(RawDataSetName.S),
               is.count(SampleSize.S))
