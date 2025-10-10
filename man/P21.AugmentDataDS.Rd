@@ -13,20 +13,22 @@ P21.AugmentDataDS(
 \item{CuratedDataSetName.S}{\code{character} - Name of the Curated Data Set object on server - Default: 'P21.CuratedDataSet'}
 
 \item{Settings.S}{\code{list} - Settings passed to function
-\itemize{\item EventFeatures \code{list}
-\itemize{\item RuleSet \code{data.frame} - Default: \code{dsCCPhos::Meta_EventFeatures}
-\item Profile \code{character} - Profile name defining rule set to be used for event feature engineering. Profile name must be stated in \code{EventFeatures$RuleSet} - Default: 'Default'}}}
+\itemize{\item CreateSubsets \code{list}
+\itemize{\item Cancer \code{logical} - Default: \code{TRUE}
+\item HIVCancer \code{logical} - Default: \code{FALSE}}}}
 }
 \value{
 A \code{list} containing the following objects:
 \itemize{\item AugmentedDataSet \code{list}
-\itemize{\item Events
-\item DiseaseCourse
-\item Therapy
-\item Diagnosis
-\item Patient}
+\itemize{\item Case \code{data.frame}
+\item Diagnosis \code{data.frame}
+\item Events \code{data.frame}
+\item Patient \code{data.frame}
+\item PatientCancer \code{data.frame}
+\item PatientHIVCancer \code{data.frame}
+\item Procedures \code{data.frame} }
 \item AugmentationReport \code{list}
-\item AugmentationMessages \code{list}}
+\item Messages \code{list}}
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}} \cr\cr

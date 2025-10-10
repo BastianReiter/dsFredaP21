@@ -10,18 +10,18 @@ P21.RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
 #RawDataSetProc <- readRDS(file = "./Development/Data/RealData/RawDataSet_PreProcessed.rds")
 
 
-P21.RawDataSet <- PrepareRawDataSetDS(RawDataSetName.S = "P21.RawDataSet",
-                                      FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
+RDSPreparation <- P21.PrepareRawDataSetDS(RawDataSetName.S = "P21.RawDataSet",
+                                          FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
 
-
+P21.RawDataSet <- RDSPreparation$Messages$RawFeatureNames
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Check Tables for existence and completeness
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "P21.RawDataSet",
-                                   Module.S = "P21",
-                                   Stage.S = "Raw")
+RDSTableCheck <- dsFreda::GetDataSetCheckDS(DataSetName.S = "P21.RawDataSet",
+                                            Module.S = "P21",
+                                            Stage.S = "Raw")
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
