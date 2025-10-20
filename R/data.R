@@ -5,19 +5,41 @@
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# DisclosureSettings.FredaP21.rda
+# Meta.ADS.rda
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#' Disclosure settings for FredaP21
+#' Meta data: Table names, feature names and eligible values in AugmentedDataSet (ADS)
+#'
+#' A \code{tibble} containing meta data
+#'
+#' @format ## `Meta.ADS`
+#' \code{tibble}
+#' \describe{
+#'   \item{TableName}{Table name}
+#'   \item{FeatureName}{Feature name}
+#'   \item{ScaleLevel}{Scale level of feature}
+#'   \item{Value}{Eligible value}
+#'   \item{Label}{Label for values}
+#'   \item{HasEligibleValueSet}{logical}
+#'   \item{FeatureIsFromCDS}{logical}
+#' }
+#' @author Bastian Reiter
+"Meta.ADS"
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Set.Privacy.rda
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#' Privacy settings for FredaP21
 #'
 #' A \code{list} containing settings concerning data privacy and disclosure mitigation
 #'
-#' @format ## `DisclosureSettings.FredaP21`
+#' @format ## `Set.Privacy`
 #' \code{list}
 #' \describe{
 #'    \item{Profile}{Can be 'strict' or 'loose'}
 #'    \item{NThreshold}{The minimum sample size required for transmission of aggregated data to client}
 #' }
-#' @source <https://github.com/BastianReiter/dsP21Curator/blob/main/Development/MetaData>
-#' @author Bastian Reiter
-"DisclosureSettings.FredaP21"
+"Set.Privacy"

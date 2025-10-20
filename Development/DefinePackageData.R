@@ -5,9 +5,9 @@ library(stringr)
 library(usethis)
 
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#===============================================================================
 # Read in Package Data from xlsx-file
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#===============================================================================
 
 ExcelFilePath <- "./Development/Data/PackageData/PackageDataFredaP21.xlsx"
 
@@ -56,10 +56,42 @@ for (sheetname in Sheetnames)
 }
 
 
+#===============================================================================
+# Add EligibleValueSets for ADS tables
+#===============================================================================
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Extract table and feature names from ADS tables
+Meta.ADS <- ADS %>%
+              imap(\(table, tablename) tibble(TableName = tablename,
+                                              FeatureName = names(table))) %>%
+              list_rbind()
+
+# Get eligible values and labels from CDS features
+CDSValues <- Meta.Values %>%
+                  select(FeatureName.Curated,
+                         ScaleLevel,
+                         Value.Curated,
+                         Label.Curated) %>%
+                  rename(c("FeatureName" = "FeatureName.Curated",
+                           "Value" = "Value.Curated",
+                           "Label" = "Label.Curated")) %>%
+                  mutate(HasEligibleValueSet = TRUE,
+                         FeatureIsFromCDS = TRUE)
+
+# Attach eligible values and labels to ADS features
+Meta.ADS <- Meta.ADS %>%
+                left_join(CDSValues,
+                          by = join_by(FeatureName),
+                          relationship = "many-to-many")
+
+# Save data in .rda-file and make it part of package
+use_data(Meta.ADS, overwrite = TRUE)
+
+
+
+#===============================================================================
 # Resource data from TinkerLab
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#===============================================================================
 
 Res.CancerGrouping <- TinkerLab::Res.CancerGrouping
 use_data(Res.CancerGrouping, overwrite = TRUE)
@@ -87,11 +119,9 @@ use_data(Res.P21.Departments, overwrite = TRUE)
 
 
 
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#===============================================================================
 # Resource data from external package 'ICD10gm'
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#===============================================================================
 
 Res.ICD10Codes <- ICD10gm::icd_meta_codes %>%
                       select(year,
@@ -107,22 +137,14 @@ use_data(Res.ICD10Codes, overwrite = TRUE)
 
 
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Disclosure Settings
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#===============================================================================
+# Privacy Settings
+#===============================================================================
 
-DisclosureSettings.FredaP21 <- list(Profile = "loose",     # Optional: 'strict', 'loose'
-                                    NThreshold = 5)
+Set.Privacy <- list(Profile = "loose",     # Optional: 'strict', 'loose'
+                    NThreshold = 5)
 
 # Save data in .rda-file and make it part of package
-use_data(DisclosureSettings.FredaP21, overwrite = TRUE)
-
-
-
-
-
-
-
-
+use_data(Set.Privacy, overwrite = TRUE)
 
 

@@ -13,7 +13,7 @@ P21.RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
 RDSPreparation <- P21.PrepareRawDataSetDS(RawDataSetName.S = "P21.RawDataSet",
                                           FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
 
-P21.RawDataSet <- RDSPreparation$Messages$RawFeatureNames
+P21.RawDataSet <- RDSPreparation$RawDataSet
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Check Tables for existence and completeness
@@ -28,8 +28,8 @@ RDSTableCheck <- dsFreda::GetDataSetCheckDS(DataSetName.S = "P21.RawDataSet",
 # OPTIONAL: Draw sample from Raw Data Set
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-P21.RawDataSet <- DrawSampleDS(RawDataSetName.S = "P21.RawDataSet",
-                               SampleSize.S = 5000)
+P21.RawDataSet <- P21.DrawSampleDS(RawDataSetName.S = "P21.RawDataSet",
+                                   SampleSize.S = 5000)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,11 +53,25 @@ CDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "P21.CuratedDataSet",
 # Augment data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-AugmentationOutput <- dsFredaP21::AugmentDataDS(CuratedDataSetName.S = "P21.CuratedDataSet")
+AugmentationOutput <- P21.AugmentDataDS(CuratedDataSetName.S = "P21.CuratedDataSet")
 
 ADS <- AugmentationOutput$AugmentedDataSet
 
-ADSTableCheck <- GetDataSetCheckDS(DataSetName.S = "ADS")
+ADSTableCheck <- GetDataSetCheckDS(DataSetName.S = "ADS",
+                                   Module.S = "P21",
+                                   Stage.S = "Augmented")
+
+# saveRDS(ADS, file = "P21_TestADS.rds")
+#
+# encryptr::genkeys()
+#
+# encryptr::encrypt_file(.path = "P21_TestADS.rds",
+#                        crypt_file_name = "P21_TestADS.rds.encryptr.bin",
+#                        public_key_path = "id_rsa.pub")
+#
+# encryptr::decrypt_file(.path = "P21_TestADS.rds.encryptr.bin",
+#                        file_name = "P21_TestADS.rds",
+#                        private_key_path = "id_rsa")
 
 
 

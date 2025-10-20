@@ -62,7 +62,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #-------------------------------------------------------------------------------
 
   # Get local object: Parse expression and evaluate
-  DataSet <- eval(parse(text = CuratedDataSetName.S), envir = parent.frame())
+  CDS <- eval(parse(text = CuratedDataSetName.S), envir = parent.frame())
 
 
 #-------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
 #-------------------------------------------------------------------------------
   ProgressBar <- progress_bar$new(format = "Augmenting data... [:bar] :percent in :elapsed  :spin",
-                                  total = 30, clear = FALSE, width = 100)
+                                  total = 26, clear = FALSE, width = 100)
 #-------------------------------------------------------------------------------
 
 
@@ -174,7 +174,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
   ADS$Events <- CDS$Case %>%
                     group_by(PatientPseudonym) %>%
                         mutate(CaseNumber = row_number(),
-                               AdmissionYear = year(AdmissionDate),
+                               AdmissionYear = lubridate::year(AdmissionDate),
                                LengthOfStay = ceiling(as.numeric(difftime(DischargeDate, AdmissionDate, units = "days") + 1))) %>%
                     ungroup() %>%
                     full_join(CDS$Department, by = join_by(CasePseudonym)) %>%
@@ -966,21 +966,21 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                LastChemotherapyDate = lubridate::as_date(ifelse(EventSubclass == "Chemotherapy",
                                                                          EventDate,
                                                                          NA)),
-                               LastChemotherapyDate_NonICU = lubridate::as_date(ifelse(EventSpecification.A %in% c("ChemotherapyNonICU", "ChemotherapyUnknown"),
+                               LastChemotherapyDate.NonICU = lubridate::as_date(ifelse(EventSpecification.A %in% c("ChemotherapyNonICU", "ChemotherapyUnknown"),
                                                                                 EventDate,
                                                                                 NA))) %>%
                         fill(LastSurgeryDate,
                              LastChemotherapyDate,
-                             LastChemotherapyDate_NonICU) %>%
+                             LastChemotherapyDate.NonICU) %>%
                         mutate(DaysSinceLastSurgery = round(as.numeric(difftime(EventDate, LastSurgeryDate, units = "days")), digits = 1),
-                               DaysSinceLastChemotherapy_NonICU = round(as.numeric(difftime(EventDate, LastChemotherapyDate_NonICU, units = "days")), digits = 1),
-                               IsPotentialComplication.AcrossCases = (is.na(DaysSinceLastChemotherapy_NonICU) == FALSE & between(DaysSinceLastChemotherapy_NonICU, 0, 30))      # Check if there has been a (Non-ICU-) Chemotherapy event in the past 20 days
+                               DaysSinceLastChemotherapy.NonICU = round(as.numeric(difftime(EventDate, LastChemotherapyDate.NonICU, units = "days")), digits = 1),
+                               IsPotentialComplication.AcrossCases = (is.na(DaysSinceLastChemotherapy.NonICU) == FALSE & between(DaysSinceLastChemotherapy.NonICU, 0, 30))      # Check if there has been a (Non-ICU-) Chemotherapy event in the past 20 days
                                                                         & (is.na(DaysSinceLastSurgery) == TRUE | DaysSinceLastSurgery > 7)      # Ensure that there has not been a preceding Surgery event in the 7 days before potential complication (across cases)
                                                                         & EventSubclass %in% c("TransferICU",
                                                                                                "Dialysis",
                                                                                                "Ventilation")) %>%      # Admission to ICU, Dialysis or Ventilation event after Chemotherapy without recent surgery is assumed as potential complication occurrence
                     group_by(PatientPseudonym, IsPotentialComplication.AcrossCases) %>%
-                        mutate(IsFirstPotentialComplication_AcrossCases = (IsPotentialComplication.AcrossCases == TRUE & row_number() == 1)) %>%
+                        mutate(IsFirstPotentialComplication.AcrossCases = (IsPotentialComplication.AcrossCases == TRUE & row_number() == 1)) %>%
                     group_by(PatientPseudonym, CasePseudonym) %>%
                         arrange(EventDate, EventClass, .by_group = TRUE) %>%
                         mutate(IsPotentialComplication.WithinCase = cumsum(EventSpecification.A == "ChemotherapyNonICU") > 0      # Check if there has been a preceding (Non-ICU-) Chemotherapy event
@@ -989,7 +989,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                                                                              "Dialysis",
                                                                                              "Ventilation")) %>%      # Admission to ICU, Dialysis or Ventilation event after Chemotherapy without recent surgery is assumed as potential complication occurrence
                     group_by(PatientPseudonym, CasePseudonym, IsPotentialComplication.WithinCase) %>%
-                        mutate(IsFirstPotentialComplication_WithinCase = (IsPotentialComplication.WithinCase == TRUE & row_number() == 1)) %>%
+                        mutate(IsFirstPotentialComplication.WithinCase = (IsPotentialComplication.WithinCase == TRUE & row_number() == 1)) %>%
                     group_by(PatientPseudonym) %>%
                         arrange(EventDate, EventClass, .by_group = TRUE) %>%
                         mutate(IsPotentialComplication.AcrossCases = ifelse(IsPotentialComplication.AcrossCases == TRUE
@@ -1003,10 +1003,10 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                                                             FALSE,
                                                                             IsPotentialComplication.WithinCase),
                                TimeChemoToComplication.AcrossCases = ifelse(IsPotentialComplication.AcrossCases == TRUE,
-                                                                            DaysSinceLastChemotherapy_NonICU[IsPotentialComplication.AcrossCases == TRUE],
+                                                                            DaysSinceLastChemotherapy.NonICU[IsPotentialComplication.AcrossCases == TRUE],
                                                                             NA),
                                TimeChemoToComplication.WithinCase = ifelse(IsPotentialComplication.WithinCase == TRUE,
-                                                                            DaysSinceLastChemotherapy_NonICU[IsPotentialComplication.WithinCase == TRUE],
+                                                                            DaysSinceLastChemotherapy.NonICU[IsPotentialComplication.WithinCase == TRUE],
                                                                             NA)) %>%
                     ungroup()
                     #=== Update Progress Bar ===
@@ -1047,10 +1047,10 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                                                                                     sum(EventSpecification.A == "HIV Diagnosis") == 0,      # If patient holds no main cancer or HIV diagnosis
                                                                                                   min(EventDate[EventSubclass == "Admission"], na.rm = TRUE),      # Then take the first admission date as value
                                                                                                   min(PresumedMainCancerDiagnosisDate, PresumedHIVDiagnosisDate, na.rm = TRUE))),
-                                                  FirstRelevantAdmissionYear = year(FirstRelevantAdmissionDate),
+                                                  FirstRelevantAdmissionYear = lubridate::year(FirstRelevantAdmissionDate),
                                                   FirstRelevantAdmissionAge = first(AdmissionAge[EventDate == FirstRelevantAdmissionDate]),
                                                   #-------------------------------
-                                                  MainCancerDiagnosisYear = year(PresumedMainCancerDiagnosisDate),
+                                                  MainCancerDiagnosisYear = lubridate::year(PresumedMainCancerDiagnosisDate),
                                                   MainCancerDiagnosisAge = first(AdmissionAge[EventDate == PresumedMainCancerDiagnosisDate]),
                                                   MainCancerDocumentedTimeSpan = ceiling(as.numeric(difftime(max(EventDate), PresumedMainCancerDiagnosisDate, units = "days")) + 1),
                                                   #-------------------------------
@@ -1135,18 +1135,18 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
 
 #===============================================================================
-# ADS$Patients: Consolidate patient-specific data
+# ADS$Patient: Consolidate patient-specific data
 #===============================================================================
 #   - Join all previously created Patient Summaries
 #-------------------------------------------------------------------------------
 
-  ADS$Patients <- Aux.PatientSummaries.CaseInfo %>%
+  ADS$Patient <- Aux.PatientSummaries.CaseInfo %>%
                       left_join(Aux.PatientSummaries.Diagnosis, by = join_by(PatientPseudonym)) %>%
                       left_join(Aux.PatientSummaries.Events, by = join_by(PatientPseudonym))
 
 
   # ------------ Temporary
-  AuxSize <- ADS$Patients %>% ungroup() %>% summarize(Step = "After creation of ADM_Patients", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- ADS$Patient %>% ungroup() %>% summarize(Step = "After creation of ADM_Patients", SampleSize = n_distinct(PatientPseudonym))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
@@ -1159,7 +1159,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 if (Settings$CreateSubsets$Cancer == TRUE)
 {
 
-  ADS$PatientCancer <- ADS$Patients %>%
+  ADS$PatientCancer <- ADS$Patient %>%
                             filter(PatientHoldsMainCancerDiagnosis == TRUE)
 
 
@@ -1223,11 +1223,11 @@ if (Settings$CreateSubsets$Cancer == TRUE)
                                                             HadComplication_Ventilation = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "Ventilation"),
                                                             HadComplication_Dialysis = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "Dialysis"),
                                                             HadComplication_TransferICU = any(IsPotentialComplication.AcrossCases == TRUE & EventSubclass == "TransferICU"),
-                                                            DateFirstComplicationAfterChemo = as.Date(lubridate::as_date(ifelse(any(IsFirstPotentialComplication_AcrossCases == TRUE),
-                                                                                                                         EventDate[IsFirstPotentialComplication_AcrossCases == TRUE],
+                                                            DateFirstComplicationAfterChemo = as.Date(lubridate::as_date(ifelse(any(IsFirstPotentialComplication.AcrossCases == TRUE),
+                                                                                                                         EventDate[IsFirstPotentialComplication.AcrossCases == TRUE],
                                                                                                                          NA))),
                                                             TimeChemoToFirstComplication = ifelse(HadComplicationAfterChemo == TRUE,
-                                                                                                  TimeChemoToComplication.AcrossCases[IsFirstPotentialComplication_AcrossCases],
+                                                                                                  TimeChemoToComplication.AcrossCases[IsFirstPotentialComplication.AcrossCases],
                                                                                                   NA),
                                                             #-------------------
                                                             HadMetastasis = any(EventSpecification.A == "Metastasis Diagnosis")) %>%
