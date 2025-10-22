@@ -28,12 +28,16 @@ RDS.Case <- read.csv(file = "./Development/Data/RealData/Data_Fall.csv",
                        Entlassungsdatum = as.Date(as.POSIXct(Entlassungsdatum, format = "%Y%m%d%H%M")),
                        Entlassungsgrund = str_sub(Entlassungsgrund, start = 1, end = 2))
 
-RDS.Department <- read.csv(file = "./Development/Data/RealData/Data_FAB.csv",
+RDS.Department <- read.csv(file = "./Development/Data/RealData/FAB.csv",
                            colClasses = "character",
                            check.names = FALSE) %>%
                       mutate(ID = 1:n(), .before = 1) %>%
                       mutate("FAB-Aufnahmedatum" = as.Date(as.POSIXct(.data[["FAB-Aufnahmedatum"]], format = "%Y%m%d%H%M")),
                              "FAB-Entlassungsdatum" = as.Date(as.POSIXct(.data[["FAB-Entlassungsdatum"]], format = "%Y%m%d%H%M")))
+
+# Test <- RDS.Department %>%
+#             mutate("FAB-Aufnahmedatum" = lubridate::parse_date_time(.data[["FAB-Aufnahmedatum"]], orders = c('YmdHM')))
+
 
 RDS.DiagnosisICD <- read.csv(file = "./Development/Data/RealData/Data_ICD.csv",
                              colClasses = "character",

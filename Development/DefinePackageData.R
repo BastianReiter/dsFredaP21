@@ -62,8 +62,8 @@ for (sheetname in Sheetnames)
 
 # Extract table and feature names from ADS tables
 Meta.ADS <- ADS %>%
-              imap(\(table, tablename) tibble(TableName = tablename,
-                                              FeatureName = names(table))) %>%
+              imap(\(Table, tablename) tibble(TableName = tablename,
+                                              FeatureName = names(Table))) %>%
               list_rbind()
 
 # Get eligible values and labels from CDS features
