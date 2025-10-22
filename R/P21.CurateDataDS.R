@@ -342,7 +342,7 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
 
                               # Save message for output
                               Messages$AddedFeatures <- c(Messages$AddedFeatures,
-                                                          info = Message)
+                                                          Info = Message)
                           }
 
                           # The following effectively removes all unknown features
@@ -460,7 +460,7 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
 
       # Save messages in output object
       Messages$ExcludedEntries_Primary <- c(Messages$ExcludedEntries_Primary,
-                                            info = Message)
+                                            Info = Message)
   }
   cat("\n")
 
@@ -1298,7 +1298,7 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
 
       # Save messages in output object
       Messages$ExcludedEntries_Secondary <- c(Messages$ExcludedEntries_Secondary,
-                                              info = Message)
+                                              Info = Message)
   }
   cat("\n")
 
@@ -1401,7 +1401,7 @@ try(ProgressBar$terminate())
 
       # Save messages in output object
       Messages$ExcludedEntries_SecondaryRedundancy <- c(Messages$ExcludedEntries_SecondaryRedundancy,
-                                                        info = Message)
+                                                        Info = Message)
   }
   cat("\n")
 

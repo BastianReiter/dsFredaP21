@@ -108,7 +108,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
   # Primary HIV codes indicating HIV infection (as used in ZI HIV coding manual)
   # O98.7, Z21, B20, B21, B22, B23.-, B23.0, B23.8, B24
-  Aux.HIVCodes <- Res.HIVCoding.Status %>% pull(PrimaryICD10Code) %>% unique()                                                     # Unspecified HIV disease
+  Aux.HIVCodes <- dsFredaP21::Res.HIVCoding.Status %>% pull(PrimaryICD10Code) %>% unique()                                                     # Unspecified HIV disease
 
 
   # Use tryCatch to catch warnings and errors

@@ -10,8 +10,8 @@ P21.RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
 #RawDataSetProc <- readRDS(file = "./Development/Data/RealData/RawDataSet_PreProcessed.rds")
 
 
-RDSPreparation <- P21.PrepareRawDataSetDS(RawDataSetName.S = "P21.RawDataSet",
-                                          FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
+RDSPreparation <- dsFreda::PrepareRawDataDS(RawDataSetName.S = "P21.RawDataSet",
+                                            FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
 
 P21.RawDataSet <- RDSPreparation$RawDataSet
 
