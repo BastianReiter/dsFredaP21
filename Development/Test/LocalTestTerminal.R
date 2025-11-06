@@ -11,7 +11,10 @@ P21.RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
 
 
 RDSPreparation <- dsFreda::PrepareRawDataDS(RawDataSetName.S = "P21.RawDataSet",
-                                            FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")))
+                                            Module.S = "P21",
+                                            FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")),
+                                            RunFuzzyStringMatching.S = TRUE,
+                                            CurateFeatureNames.S = TRUE)
 
 P21.RawDataSet <- RDSPreparation$RawDataSet
 

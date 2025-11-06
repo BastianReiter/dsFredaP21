@@ -35,8 +35,8 @@ for (sheetname in Sheetnames)
                               range = cell_rows(2),
                               col_names = colnames(Table)) %>%
                       tidyr::pivot_longer(everything(),
-                             names_to = "Column",
-                             values_to = "Type")
+                                          names_to = "Column",
+                                          values_to = "Type")
 
     if (nrow(ColumnTypes) > 0)
     {
@@ -82,7 +82,8 @@ CDSValues <- Meta.Values %>%
 Meta.ADS <- Meta.ADS %>%
                 left_join(CDSValues,
                           by = join_by(FeatureName),
-                          relationship = "many-to-many")
+                          relationship = "many-to-many") %>%
+                distinct()
 
 # Save data in .rda-file and make it part of package
 use_data(Meta.ADS, overwrite = TRUE)

@@ -1,7 +1,7 @@
 
 #' P21.CurateDataDS
 #'
-#' `r lifecycle::badge("stable")` \cr\cr
+#' `r lifecycle::badge("experimental")` \cr\cr
 #' Transforms CCP Raw Data Set (RDS) into Curated Data Set (CDS) while tracing data transformation.
 #'
 #' Server-side ASSIGN method
