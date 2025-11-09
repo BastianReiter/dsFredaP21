@@ -91,7 +91,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
   Aux.SampleSize <- CDS$Case %>%
                           ungroup() %>%
                           summarize(Step = "Initial data",
-                                    SampleSize = n_distinct(PatientPseudonym))
+                                    SampleSize = n_distinct(PatientID))
 
 #-------------------------------------------------------------------------------
 
@@ -172,19 +172,19 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
   cli::cat_bullet("Initiating ADS$Events", bullet = "info")
   #-----------------------------------------------------------------------------
   ADS$Events <- CDS$Case %>%
-                    group_by(PatientPseudonym) %>%
+                    group_by(PatientID) %>%
                         mutate(CaseNumber = row_number(),
                                AdmissionYear = lubridate::year(AdmissionDate),
                                LengthOfStay = ceiling(as.numeric(difftime(DischargeDate, AdmissionDate, units = "days") + 1))) %>%
                     ungroup() %>%
-                    full_join(CDS$Department, by = join_by(CasePseudonym)) %>%
-                    filter(is.na(PatientPseudonym) == FALSE) %>%
+                    full_join(CDS$Department, by = join_by(CaseID)) %>%
+                    filter(is.na(PatientID) == FALSE) %>%
                     left_join(dsFredaP21::Res.P21.AdmissionCauses, by = join_by(AdmissionCauseCode)) %>%
                     left_join(dsFredaP21::Res.P21.DischargeReasons, by = join_by(DischargeReasonCode)) %>%
                     left_join(dsFredaP21::Res.P21.Departments, by = join_by(DepartmentCode)) %>%
-                    arrange(PatientPseudonym, AdmissionDate, DepartmentAdmissionDate) %>%
-                    select(PatientPseudonym,
-                           CasePseudonym,
+                    arrange(PatientID, AdmissionDate, DepartmentAdmissionDate) %>%
+                    select(PatientID,
+                           CaseID,
                            CaseNumber,
                            YearOfBirth,
                            Sex,
@@ -216,9 +216,9 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
 
   ADS$Events <- ADS$Events %>%
-                    arrange(PatientPseudonym, AdmissionDate, DepartmentAdmissionDate) %>%
+                    arrange(PatientID, AdmissionDate, DepartmentAdmissionDate) %>%
                     mutate(DepartmentIsPseudo = (Department == "Pseudo")) %>%
-                    group_by(PatientPseudonym, CasePseudonym) %>%
+                    group_by(PatientID, CaseID) %>%
                         add_tally(name = "CountTransfersWithinCase") %>%
                         add_tally(DepartmentAdmissionToICU,
                                   name = "CountTransfersICU") %>%
@@ -232,7 +232,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
   #-----------------------------------------------------------------------------
   ADS$Events <- ADS$Events %>%
                     ungroup() %>%
-                    arrange(PatientPseudonym, AdmissionDate, DepartmentAdmissionDate) %>%
+                    arrange(PatientID, AdmissionDate, DepartmentAdmissionDate) %>%
                     #--- If Department is "Pseudo" and Transfer Time is neighboring Admission to non-Pseudo-Department, turn it into "real" Department
                     mutate(DepartmentCode = if_else(Department == "Pseudo" & (DepartmentAdmissionDate == tidytable::lag(DepartmentDischargeDate)),
                                                     tidytable::lag(DepartmentCode),
@@ -261,8 +261,8 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                     ungroup() %>%
                     select(-HasStayedWithoutPause,
                            -WillStayWithoutPause) %>%
-                    distinct(PatientPseudonym,
-                             CasePseudonym,
+                    distinct(PatientID,
+                             CaseID,
                              DepartmentCode,
                              DepartmentAdmissionToICU,
                              DepartmentAdmissionDate,
@@ -273,8 +273,8 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
 
   ADS$Events <- ADS$Events %>%
-                    arrange(PatientPseudonym, AdmissionDate, DepartmentAdmissionDate) %>%
-                    group_by(PatientPseudonym, CasePseudonym) %>%
+                    arrange(PatientID, AdmissionDate, DepartmentAdmissionDate) %>%
+                    group_by(PatientID, CaseID) %>%
                         mutate(TransferNumber = row_number(),
                                EventDate = DepartmentAdmissionDate,
                                EventClass = "Administration",
@@ -298,7 +298,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
 
   # ---------- Temporary
-  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After first event handling", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After first event handling", SampleSize = n_distinct(PatientID))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
@@ -307,10 +307,10 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #===============================================================================
 
   ADS$Case <- ADS$Events %>%
-                  group_by(PatientPseudonym, CasePseudonym) %>%
+                  group_by(PatientID, CaseID) %>%
                       filter(TransferNumber == 1) %>%
-                      select(PatientPseudonym,
-                             CasePseudonym,
+                      select(PatientID,
+                             CaseID,
                              CaseNumber,
                              YearOfBirth,
                              Sex,
@@ -357,7 +357,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #===============================================================================
 
   Aux.DischargeEvents <- ADS$Events %>%
-                              group_by(PatientPseudonym, CasePseudonym) %>%
+                              group_by(PatientID, CaseID) %>%
                                   filter(TransferNumber == max(TransferNumber)) %>%
                                   mutate(EventDate = DepartmentDischargeDate,
                                          EventClass = "Administration",
@@ -375,13 +375,13 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
   ADS$Events <- ADS$Events %>%
                     ungroup() %>%
                     add_row(Aux.DischargeEvents) %>%
-                    arrange(PatientPseudonym, CasePseudonym, EventDate)
+                    arrange(PatientID, CaseID, EventDate)
                     #=== Update Progress Bar ===
                     try(ProgressBar$tick())
 
 
   # ---------- Temporary
-  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After discharge events", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After discharge events", SampleSize = n_distinct(PatientID))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
@@ -391,11 +391,11 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #===============================================================================
 
   ADS$Events <- ADS$Events %>%
-                    select(PatientPseudonym,
+                    select(PatientID,
                            YearOfBirth,
                            Sex,
                            CaseNumber,
-                           CasePseudonym,
+                           CaseID,
                            AdmissionAge,
                            DepartmentCode,
                            Department,
@@ -420,7 +420,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #-------------------------------------------------------------------------------
 
   ADS$Diagnosis <- ADS$Case %>%
-                        left_join(CDS$DiagnosisICD, by = join_by(CasePseudonym)) %>%
+                        left_join(CDS$DiagnosisICD, by = join_by(CaseID)) %>%
                         left_join(dsFredaP21::Res.HIVCoding.Status, by = join_by(ICD10Code == PrimaryICD10Code,
                                                                                  SecondaryICD10Code == SecondaryICD10Code)) %>%
                         left_join(dsFredaP21::Res.HIVCoding.Diseases, by = join_by(ICD10Code == PrimaryICD10Code,
@@ -465,8 +465,8 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                  IsHIVNonADCodeCancer = case_when((HIVAssociation == "HIV associated" & HIVDiseaseClass == "Cancer") ~ TRUE,
                                                                   TRUE ~ FALSE),
                                  IsChronicRenalFailure = str_starts(ICD10Code, "N18")) %>%
-                          arrange(PatientPseudonym, AdmissionDate, IsADCode) %>%      # HIV codes have to be listed before AIDS defining codes if occurring on the same date
-                          group_by(PatientPseudonym) %>%
+                          arrange(PatientID, AdmissionDate, IsADCode) %>%      # HIV codes have to be listed before AIDS defining codes if occurring on the same date
+                          group_by(PatientID) %>%
                               mutate(IsAIDSCode = case_when(HIVStatusInterpretation == "AIDS" ~ TRUE,
                                                             (cumsum(IsHIVCode) > 0 & IsADCode == TRUE) ~ TRUE,      # Check if HIV code already occurred. If so and if the code stands for an AIDS defining disease, interpret as AIDS code.
                                                             TRUE ~ FALSE),      # In "case_when" logic "TRUE ~ " is equivalent to "else"-statement
@@ -492,9 +492,9 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #-------------------------------------------------------------------------------
 
   ADS$Diagnosis <- ADS$Diagnosis %>%
-                        left_join(dsFredaP21::Res.ICD10Codes, by = join_by(ICDVersion == ICDVersion,
+                        left_join(dsFredaP21::Res.ICD10Codes, by = join_by(ICD10Version == ICD10Version,
                                                                            ICD10Code.Short == ICD10Code)) %>%
-                        left_join(dsFredaP21::Res.ICD10Codes, by = join_by(ICDVersion == ICDVersion,
+                        left_join(dsFredaP21::Res.ICD10Codes, by = join_by(ICD10Version == ICD10Version,
                                                                            ICD10Code == ICD10Code)) %>%
                         rename(DiagnosisGeneral = Diagnosis.x,
                                DiagnosisDetail = Diagnosis.y) %>%
@@ -521,11 +521,11 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
   ADS$Diagnosis <- ADS$Diagnosis %>%
                         select(#--- Patient-specific data ------------------
-                               PatientPseudonym,
+                               PatientID,
                                YearOfBirth,
                                Sex,
                                #--- Case-specific data -------------------------
-                               CasePseudonym,
+                               CaseID,
                                CaseNumber,
                                PostalCode,
                                AdmissionDate,
@@ -577,7 +577,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                CancerIsCarcinomaInSitu,
                                CancerIsNeoplasmOfUncertainBehavior) %>%
                         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        arrange(PatientPseudonym, AdmissionDate, DiagnosisType)
+                        arrange(PatientID, AdmissionDate, DiagnosisType)
 
 
 
@@ -595,29 +595,29 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #-------------------------------------------------------------------------------
 
   ADS$Diagnosis <- ADS$Diagnosis %>%
-                        group_by(PatientPseudonym) %>%
+                        group_by(PatientID) %>%
                             arrange(AdmissionDate, .by_group = TRUE) %>%      # Sort all coded diagnoses of each patient by admission date
                         #--- Presumed Cancer Diagnosis -------------------
                         # Step 1: Identify first occurring potential main cancer
-                        group_by(PatientPseudonym, IsPotentialMainCancer) %>%
+                        group_by(PatientID, IsPotentialMainCancer) %>%
                             mutate(IsPresumedMainCancer = (IsPotentialMainCancer == TRUE & row_number() == 1)) %>%
                         # Step 2: If there is no other Cancer Code that occurred before or at the same time (especially Z85 / Z92.6 or "ND" diagnoses), assume First Diagnosis of Cancer for code that is TRUE in IsPresumedMainCancer
-                        group_by(PatientPseudonym) %>%
+                        group_by(PatientID) %>%
                             arrange(AdmissionDate, .by_group = TRUE) %>%
                             mutate(IsPresumedMainCancerFirstDiagnosis = IsPresumedMainCancer == TRUE &
                                                                           (any(AdmissionDate[IsCancerCode == TRUE & IsPotentialMainCancer == FALSE] <= AdmissionDate[IsPresumedMainCancer == TRUE]) == FALSE)) %>%
                         #--- Presumed Metastasis Diagnosis ---------------
-                        group_by(PatientPseudonym) %>%
+                        group_by(PatientID) %>%
                             arrange(AdmissionDate, IsMetastasisCode, .by_group = TRUE) %>%      # Primary Cancer codes have to be listed before Metastasis codes if occurring on the same date. Here FALSE values for IsMetastasisCode appear on top of sorted "list".
                             mutate(IsFirstMetastasisCode = (cumsum(IsPresumedMainCancer) > 0 & IsMetastasisCode == TRUE)) %>%      # Check if Primary Cancer code already occurred
                         group_by(IsMetastasisCode, .add = TRUE) %>%
                             mutate(IsFirstMetastasisCode = (IsFirstMetastasisCode == TRUE & row_number() == 1)) %>%
                         #--- First HIV Code ----------------------
-                        group_by(PatientPseudonym, IsHIVCode) %>%
+                        group_by(PatientID, IsHIVCode) %>%
                             arrange(AdmissionDate, .by_group = TRUE) %>%
                             mutate(IsFirstHIVCode = (IsHIVCode == TRUE & row_number() == 1)) %>%
                         #--- First AIDS Code ---------------------
-                        group_by(PatientPseudonym, IsAIDSCode) %>%
+                        group_by(PatientID, IsAIDSCode) %>%
                             mutate(IsFirstAIDSCode = (IsAIDSCode == TRUE & row_number() == 1)) %>%
                         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                         ungroup()
@@ -631,7 +631,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #===============================================================================
 
   Aux.DiagnosisEvents <- ADS$Diagnosis %>%
-                              group_by(PatientPseudonym) %>%
+                              group_by(PatientID) %>%
                                   mutate(EventDate = AdmissionDate,
                                          #EventDate = AdmissionDate + days(LengthOfStay / 2),
                                          EventClass = "Diagnosis",
@@ -651,8 +651,8 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                                                        NA),
                                          EventLevelOfCare = NA) %>%
                                   filter(is.na(EventSpecification.A) == FALSE) %>%
-                                  select(PatientPseudonym,
-                                         CasePseudonym,
+                                  select(PatientID,
+                                         CaseID,
                                          EventDate,
                                          EventClass,
                                          EventSubclass,
@@ -668,7 +668,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
   ADS$Events <- ADS$Events %>%
                     ungroup() %>%
                     add_row(Aux.DiagnosisEvents) %>%
-                    group_by(PatientPseudonym, CasePseudonym) %>%
+                    group_by(PatientID, CaseID) %>%
                         fill(c(YearOfBirth,
                                Sex,
                                AdmissionAge,
@@ -678,13 +678,13 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                         mutate(EventDate = lubridate::as_date(ifelse(EventClass == "Diagnosis",
                                                           EventDate[EventSubclass == "Admission"],
                                                           EventDate))) %>%
-                        arrange(PatientPseudonym, CasePseudonym, EventDate)
+                        arrange(PatientID, CaseID, EventDate)
                     #=== Update Progress Bar ===
                     try(ProgressBar$tick())
 
 
   # ------------ Temporary
-  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After diagnosis events", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After diagnosis events", SampleSize = n_distinct(PatientID))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
@@ -695,7 +695,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #-------------------------------------------------------------------------------
 
   Aux.CaseSummaries.Diagnosis <- ADS$Diagnosis %>%
-                                      group_by(PatientPseudonym, CasePseudonym) %>%
+                                      group_by(PatientID, CaseID) %>%
                                           summarize(CaseHoldsCancerCodes = any(IsCancerCode == TRUE),
                                                     CaseHoldsMetastasisCodes = any(IsFirstMetastasisCode == TRUE),
                                                     CaseHoldsHIVCodes = any(IsHIVCode == TRUE),
@@ -731,7 +731,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #   - DistinctCodeCountAIDS: Count of all distinct AIDS codes
 
   Aux.PatientSummaries.Diagnosis <- ADS$Diagnosis %>%
-                                        group_by(PatientPseudonym) %>%
+                                        group_by(PatientID) %>%
                                             summarize(DistinctCodeCount = n_distinct(ICD10Code.Short),
                                                       DistinctCodeCountCancer = n_distinct(ICD10Code.Short[IsCancerCode == TRUE & str_starts(ICD10Code, "Z08|Z85|Z92.6") == FALSE]),      # Only count "real" cancer codes
                                                       DistinctCodeCountMainCancer = n_distinct(ICD10Code.Short[IsPotentialMainCancer == TRUE]),
@@ -796,8 +796,8 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
   # Add Information about Potential Main Cancer Diagnoses to Case Data
   ADS$Case <- ADS$Case %>%
-                  left_join(Aux.PatientSummaries.Diagnosis, by = join_by(PatientPseudonym)) %>%
-                  left_join(Aux.CaseSummaries.Diagnosis, by = join_by(PatientPseudonym, CasePseudonym))
+                  left_join(Aux.PatientSummaries.Diagnosis, by = join_by(PatientID)) %>%
+                  left_join(Aux.CaseSummaries.Diagnosis, by = join_by(PatientID, CaseID))
                   #=== Update Progress Bar ===
                   try(ProgressBar$tick())
 
@@ -811,9 +811,9 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
   # Get score points for Charlson comorbidity categories
   Aux.ComorbiditiesCharlson <- ADS$Diagnosis %>%
-                                    group_by(CasePseudonym) %>%
+                                    group_by(CaseID) %>%
                                         distinct(ICD10Code) %>%
-                                        comorbidity::comorbidity(id = "CasePseudonym",
+                                        comorbidity::comorbidity(id = "CaseID",
                                                                  code = "ICD10Code",
                                                                  map = "charlson_icd10_quan",
                                                                  assign0 = TRUE)
@@ -823,7 +823,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
   # Calculation of Charlson Comorbidity score
   Aux.ScoreCharlson <- Aux.ComorbiditiesCharlson %>%
-                              select(CasePseudonym) %>%
+                              select(CaseID) %>%
                               mutate(ComorbidityScore.Charlson = comorbidity::score(Aux.ComorbiditiesCharlson,
                                                                                     weights = "quan",
                                                                                     assign0 = TRUE))
@@ -831,9 +831,9 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
   # Get score points for Elixhauser comorbidity categories
   Aux.ComorbiditiesElixhauser <- ADS$Diagnosis %>%
-                                      group_by(CasePseudonym) %>%
+                                      group_by(CaseID) %>%
                                           distinct(ICD10Code) %>%
-                                          comorbidity::comorbidity(id = "CasePseudonym",
+                                          comorbidity::comorbidity(id = "CaseID",
                                                                    code = "ICD10Code",
                                                                    map = "elixhauser_icd10_quan",
                                                                    assign0 = TRUE)
@@ -842,15 +842,15 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
   # AIDS/HIV has weight 0, so we don't have to exclude this comorbidity prior to avoid induced bias in later matching
   # Cancerous comorbidity are included for now
   Aux.ScoreElixhauser <- Aux.ComorbiditiesElixhauser %>%
-                              select(CasePseudonym) %>%
+                              select(CaseID) %>%
                               mutate(ComorbidityScore.Elixhauser = comorbidity::score(Aux.ComorbiditiesElixhauser,
                                                                                       weights = "vw",      # 'swiss' would be a more recently published alternative
                                                                                       assign0 = TRUE))
 
   # Add Comorbidity Scores to Case Data
   ADS$Case <- ADS$Case %>%
-                  left_join(Aux.ScoreCharlson, by = join_by(CasePseudonym)) %>%
-                  left_join(Aux.ScoreElixhauser, by = join_by(CasePseudonym))
+                  left_join(Aux.ScoreCharlson, by = join_by(CaseID)) %>%
+                  left_join(Aux.ScoreElixhauser, by = join_by(CaseID))
                   #=== Update Progress Bar ===
                   try(ProgressBar$tick())
 
@@ -861,7 +861,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #===============================================================================
 
   ADS$Procedures <- ADS$Case %>%
-                        left_join(CDS$Procedure, by = join_by(CasePseudonym)) %>%
+                        left_join(CDS$Procedure, by = join_by(CaseID)) %>%
                         mutate(OPSCode.Short = str_sub(OPSCode, end = 4)) %>%
                         left_join(select(dsFredaP21::Res.OPSCodes, c(OPSCode, Procedure)), by = join_by(OPSCode.Short == OPSCode)) %>%
                         mutate(ProcedureType = case_when(str_starts(OPSCode.Short, "5") & OPSCode.Short %notin% c("5411", "5936") ~ "Surgery",
@@ -883,7 +883,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
 
   Aux.ProcedureEvents <- ADS$Procedures %>%
-                                group_by(PatientPseudonym) %>%
+                                group_by(PatientID) %>%
                                     mutate(EventDate = OPSDate,
                                            EventClass = "Procedure",
                                            EventSubclass = ProcedureType,
@@ -897,8 +897,8 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                            EventSpecification.C = NA,
                                            EventLevelOfCare = NA) %>%
                                     filter(is.na(EventSubclass) == FALSE) %>%
-                                    select(PatientPseudonym,
-                                           CasePseudonym,
+                                    select(PatientID,
+                                           CaseID,
                                            EventDate,
                                            EventClass,
                                            EventSubclass,
@@ -915,14 +915,14 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                     ungroup() %>%
                     add_row(Aux.ProcedureEvents) %>%
                     #filter(is.na(EventSpecification.A) | EventSpecification.A != "OtherSurgery") %>%       # Disabled this filtering to make pipeline non-cancer-specific
-                    group_by(PatientPseudonym, CasePseudonym) %>%
+                    group_by(PatientID, CaseID) %>%
                         fill(c(YearOfBirth,
                                Sex,
                                AdmissionAge,
                                DepartmentCode,
                                Department,
                                OperatingSpecialty)) %>%
-                        arrange(PatientPseudonym, CasePseudonym, EventDate) %>%
+                        arrange(PatientID, CaseID, EventDate) %>%
                         fill(CaseNumber,
                              EventLevelOfCare) %>%
                         mutate(EventClass = factor(EventClass, levels = c("Administration", "Diagnosis", "Procedure")),      # Factorize EventClass to establish order of Admission and Diagnosis events if they have the same EventDate
@@ -940,25 +940,25 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                                                 EventSubclass == "Dialysis" & EventLevelOfCare == "NonICU" ~ "DialysisNonICU",
                                                                 EventSubclass == "Dialysis" & EventLevelOfCare == "Unknown" ~ "DialysisUnknown",
                                                                 TRUE ~ EventSpecification.A)) %>%
-                    group_by(CasePseudonym, EventSpecification.A) %>%
+                    group_by(CaseID, EventSpecification.A) %>%
                         arrange(EventDate, .by_group = TRUE) %>%
                         mutate(IsFirstOfProcedure.WithinCase = (EventClass == "Procedure" & row_number() == 1)) %>%
-                    group_by(PatientPseudonym, EventSpecification.A) %>%
+                    group_by(PatientID, EventSpecification.A) %>%
                         arrange(EventDate, .by_group = TRUE) %>%
                         mutate(IsFirstOfProcedure.AcrossCases = (EventClass == "Procedure" & row_number() == 1)) %>%
                     ungroup() %>%
-                    arrange(PatientPseudonym, EventDate, EventClass)
+                    arrange(PatientID, EventDate, EventClass)
                     #=== Update Progress Bar ===
                     try(ProgressBar$tick())
 
 
   # ------------ Temporary
-  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After prodedure events", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After prodedure events", SampleSize = n_distinct(PatientID))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
   ADS$Events <- ADS$Events %>%
-                    group_by(PatientPseudonym) %>%
+                    group_by(PatientID) %>%
                         arrange(EventDate, EventClass, .by_group = TRUE) %>%
                         mutate(LastSurgeryDate = lubridate::as_date(ifelse(EventSubclass == "Surgery",
                                                                     EventDate,
@@ -979,18 +979,18 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
                                                                         & EventSubclass %in% c("TransferICU",
                                                                                                "Dialysis",
                                                                                                "Ventilation")) %>%      # Admission to ICU, Dialysis or Ventilation event after Chemotherapy without recent surgery is assumed as potential complication occurrence
-                    group_by(PatientPseudonym, IsPotentialComplication.AcrossCases) %>%
+                    group_by(PatientID, IsPotentialComplication.AcrossCases) %>%
                         mutate(IsFirstPotentialComplication.AcrossCases = (IsPotentialComplication.AcrossCases == TRUE & row_number() == 1)) %>%
-                    group_by(PatientPseudonym, CasePseudonym) %>%
+                    group_by(PatientID, CaseID) %>%
                         arrange(EventDate, EventClass, .by_group = TRUE) %>%
                         mutate(IsPotentialComplication.WithinCase = cumsum(EventSpecification.A == "ChemotherapyNonICU") > 0      # Check if there has been a preceding (Non-ICU-) Chemotherapy event
                                                                       & (is.na(DaysSinceLastSurgery) == TRUE | DaysSinceLastSurgery > 7)      # Ensure that there has not been a Surgery event during the 7 days prior
                                                                       & EventSubclass %in% c("TransferICU",
                                                                                              "Dialysis",
                                                                                              "Ventilation")) %>%      # Admission to ICU, Dialysis or Ventilation event after Chemotherapy without recent surgery is assumed as potential complication occurrence
-                    group_by(PatientPseudonym, CasePseudonym, IsPotentialComplication.WithinCase) %>%
+                    group_by(PatientID, CaseID, IsPotentialComplication.WithinCase) %>%
                         mutate(IsFirstPotentialComplication.WithinCase = (IsPotentialComplication.WithinCase == TRUE & row_number() == 1)) %>%
-                    group_by(PatientPseudonym) %>%
+                    group_by(PatientID) %>%
                         arrange(EventDate, EventClass, .by_group = TRUE) %>%
                         mutate(IsPotentialComplication.AcrossCases = ifelse(IsPotentialComplication.AcrossCases == TRUE
                                                                               & EventSubclass == "Dialysis"
@@ -1014,7 +1014,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 
 
   # ------------ Temporary
-  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After event processing", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- ADS$Events %>% ungroup() %>% summarize(Step = "After event processing", SampleSize = n_distinct(PatientID))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
@@ -1025,7 +1025,7 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #   - LastRecordedDischargeCategory: Taken as rough momentary "outcome" of medical care
 
   Aux.PatientSummaries.Events <- ADS$Events %>%
-                                        group_by(PatientPseudonym) %>%
+                                        group_by(PatientID) %>%
                                         summarize(PresumedMainCancerDiagnosisDate = lubridate::as_date(ifelse(any(EventSpecification.A == "Main Cancer Diagnosis"),
                                                                                                        EventDate[EventSpecification.A == "Main Cancer Diagnosis"],
                                                                                                        NA)),
@@ -1098,13 +1098,13 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #-------------------------------------------------------------------------------
 
   Aux.PatientSummaries.CaseInfo <- ADS$Case %>%
-                                          group_by(PatientPseudonym) %>%
+                                          group_by(PatientID) %>%
                                               arrange(AdmissionDate, .by_group = TRUE) %>%
                                               summarize(YearOfBirth = first(YearOfBirth),
                                                         Sex = first(Sex),
                                                         PrimaryPostalCode = first(PostalCode),
                                                         #-------------------------
-                                                        CaseCount = n_distinct(CasePseudonym),
+                                                        CaseCount = n_distinct(CaseID),
                                                         LengthOfStayTotal = sum(LengthOfStay),
                                                         #-------------------------
                                                         ICUTransfersAbsolute = sum(CountTransfersICU, na.rm = TRUE),
@@ -1141,12 +1141,12 @@ P21.AugmentDataDS <- function(CuratedDataSetName.S = "P21.CuratedDataSet",
 #-------------------------------------------------------------------------------
 
   ADS$Patient <- Aux.PatientSummaries.CaseInfo %>%
-                      left_join(Aux.PatientSummaries.Diagnosis, by = join_by(PatientPseudonym)) %>%
-                      left_join(Aux.PatientSummaries.Events, by = join_by(PatientPseudonym))
+                      left_join(Aux.PatientSummaries.Diagnosis, by = join_by(PatientID)) %>%
+                      left_join(Aux.PatientSummaries.Events, by = join_by(PatientID))
 
 
   # ------------ Temporary
-  AuxSize <- ADS$Patient %>% ungroup() %>% summarize(Step = "After creation of ADM_Patients", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- ADS$Patient %>% ungroup() %>% summarize(Step = "After creation of ADM_Patients", SampleSize = n_distinct(PatientID))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
@@ -1168,8 +1168,8 @@ if (Settings$CreateSubsets$Cancer == TRUE)
 #===============================================================================
 
   Aux.CancerPatientSummaries.Progress <- ADS$Events %>%
-                                              filter(PatientPseudonym %in% ADS$PatientCancer$PatientPseudonym) %>%
-                                              group_by(PatientPseudonym) %>%
+                                              filter(PatientID %in% ADS$PatientCancer$PatientID) %>%
+                                              group_by(PatientID) %>%
                                                   summarize(HadAnyCancerTherapy = any(str_starts(EventSpecification.A, "CancerSurgery")) |
                                                                                     any(EventSubclass %in% c("Chemotherapy",
                                                                                                              "Immunotherapy",
@@ -1237,7 +1237,7 @@ if (Settings$CreateSubsets$Cancer == TRUE)
 
 
   # ------------ Temporary
-  AuxSize <- Aux.CancerPatientSummaries.Progress %>% ungroup() %>% summarize(Step = "After CancerPatientSummaries_Progress", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- Aux.CancerPatientSummaries.Progress %>% ungroup() %>% summarize(Step = "After CancerPatientSummaries_Progress", SampleSize = n_distinct(PatientID))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
@@ -1250,7 +1250,7 @@ if (Settings$CreateSubsets$Cancer == TRUE)
 #-------------------------------------------------------------------------------
 
   Aux.CancerPatientSummaries.TherapySequence <- Aux.CancerPatientSummaries.Progress %>%
-                                                    select(PatientPseudonym,
+                                                    select(PatientID,
                                                            DateFirstCancerSurgery,
                                                            DateFirstChemotherapy,
                                                            DateFirstImmunotherapy,
@@ -1260,14 +1260,14 @@ if (Settings$CreateSubsets$Cancer == TRUE)
                                                            DateFirstBoneMarrowTransplant,
                                                            DateFirstPotentialCARTCellTherapy,
                                                            DateFirstComplicationAfterChemo) %>%
-                                                    filter(!if_all(c(everything(), -PatientPseudonym), ~ is.na(.x))) %>%
-                                                    group_by(PatientPseudonym) %>%
-                                                        pivot_longer(c(everything(), -PatientPseudonym),
+                                                    filter(!if_all(c(everything(), -PatientID), ~ is.na(.x))) %>%
+                                                    group_by(PatientID) %>%
+                                                        pivot_longer(c(everything(), -PatientID),
                                                                      names_to = "Event",
                                                                      values_to = "TherapyOnsetDate") %>%
                                                         filter(!is.na(TherapyOnsetDate)) %>%
-                                                        arrange(PatientPseudonym, TherapyOnsetDate) %>%
-                                                    group_by(PatientPseudonym, TherapyOnsetDate) %>%
+                                                        arrange(PatientID, TherapyOnsetDate) %>%
+                                                    group_by(PatientID, TherapyOnsetDate) %>%
                                                         summarize(ColSurgery = ifelse(any(Event == "DateFirstCancerSurgery"), "Surgery", NA),
                                                                   ColChemotherapy = ifelse(any(Event == "DateFirstChemotherapy"), "Chemotherapy", NA),
                                                                   ColImmunotherapy = ifelse(any(Event == "DateFirstImmunotherapy"), "Immunotherapy", NA),
@@ -1288,8 +1288,8 @@ if (Settings$CreateSubsets$Cancer == TRUE)
                                                                 "ColCARTCellTherapy",
                                                                 "ColComplication"),
                                                               remove = TRUE, na.rm = TRUE, sep = " & ") %>%
-                                                        mutate(Stage = row_number(), .after = PatientPseudonym) %>%
-                                                    group_by(PatientPseudonym) %>%
+                                                        mutate(Stage = row_number(), .after = PatientID) %>%
+                                                    group_by(PatientID) %>%
                                                     pivot_wider(names_from = Stage, values_from = c(TherapyOnset, TherapyOnsetDate)) %>%
                                                     ungroup()
                                                     #=== Update Progress Bar ===
@@ -1297,7 +1297,7 @@ if (Settings$CreateSubsets$Cancer == TRUE)
 
 
   # ------------ Temporary
-  AuxSize <- Aux.CancerPatientSummaries.TherapySequence %>% ungroup() %>% summarize(Step = "After CancerPatientSummaries.TherapySequence", SampleSize = n_distinct(PatientPseudonym))
+  AuxSize <- Aux.CancerPatientSummaries.TherapySequence %>% ungroup() %>% summarize(Step = "After CancerPatientSummaries.TherapySequence", SampleSize = n_distinct(PatientID))
   Aux.SampleSize <- rbind(Aux.SampleSize, AuxSize)
 
 
@@ -1309,8 +1309,8 @@ if (Settings$CreateSubsets$Cancer == TRUE)
 #-------------------------------------------------------------------------------
 
   ADS$PatientCancer <- ADS$PatientCancer %>%
-                            left_join(Aux.CancerPatientSummaries.Progress, by = join_by(PatientPseudonym)) %>%
-                            left_join(Aux.CancerPatientSummaries.TherapySequence, by = join_by(PatientPseudonym)) %>%
+                            left_join(Aux.CancerPatientSummaries.Progress, by = join_by(PatientID)) %>%
+                            left_join(Aux.CancerPatientSummaries.TherapySequence, by = join_by(PatientID)) %>%
                             mutate(PatientSubgroupHIVCancerCategory = case_when(MainCancerIsAD == TRUE ~ "HIV-associated AD cancer",
                                                                                 MainCancerIsHIVNonAD == TRUE ~ "HIV-associated non-AD cancer",
                                                                                 (MainCancerIsAD == FALSE & MainCancerIsHIVNonAD == FALSE) ~ "Non-HIV-associated cancer"))
@@ -1388,19 +1388,19 @@ if (Settings$CreateSubsets$HIVCancer)
 #-------------------------------------------------------------------------------
 
   Aux.HIVCancerPatientSummaries.HIVCancerSequence <- ADS$PatientHIVCancer %>%
-                                                            select(PatientPseudonym,
+                                                            select(PatientID,
                                                                    PresumedMainCancerDiagnosisDate,
                                                                    PresumedMetastasisDiagnosisDate,
                                                                    PresumedHIVDiagnosisDate,
                                                                    PresumedAIDSDiagnosisDate) %>%
-                                                            filter(!if_all(c(everything(), -PatientPseudonym), ~ is.na(.x))) %>%
-                                                            group_by(PatientPseudonym) %>%
-                                                            pivot_longer(c(everything(), -PatientPseudonym),
+                                                            filter(!if_all(c(everything(), -PatientID), ~ is.na(.x))) %>%
+                                                            group_by(PatientID) %>%
+                                                            pivot_longer(c(everything(), -PatientID),
                                                                          names_to = "Event",
                                                                          values_to = "DiagnosisSequenceDate") %>%
                                                             filter(!is.na(DiagnosisSequenceDate)) %>%
-                                                            arrange(PatientPseudonym, DiagnosisSequenceDate) %>%
-                                                        group_by(PatientPseudonym, DiagnosisSequenceDate) %>%
+                                                            arrange(PatientID, DiagnosisSequenceDate) %>%
+                                                        group_by(PatientID, DiagnosisSequenceDate) %>%
                                                             summarize(ColCancer = ifelse(any(Event == "PresumedMainCancerDiagnosisDate"), "Cancer", NA),
                                                                       ColMetastasis = ifelse(any(Event == "PresumedMetastasisDiagnosisDate"), "Metastasis", NA),
                                                                       ColHIV = ifelse(any(Event == "PresumedHIVDiagnosisDate"), "HIV", NA),
@@ -1411,8 +1411,8 @@ if (Settings$CreateSubsets$HIVCancer)
                                                                     "ColHIV",
                                                                     "ColAIDS"),
                                                                   remove = TRUE, na.rm = TRUE, sep = " & ") %>%
-                                                            mutate(Stage = row_number(), .after = PatientPseudonym) %>%
-                                                        group_by(PatientPseudonym) %>%
+                                                            mutate(Stage = row_number(), .after = PatientID) %>%
+                                                        group_by(PatientID) %>%
                                                         pivot_wider(names_from = Stage, values_from = c(DiagnosisSequence, DiagnosisSequenceDate)) %>%
                                                         ungroup()
                                                         #=== Update Progress Bar ===
@@ -1427,7 +1427,7 @@ if (Settings$CreateSubsets$HIVCancer)
 #-------------------------------------------------------------------------------
 
   ADS$PatientHIVCancer <- ADS$PatientHIVCancer %>%
-                                left_join(df_Aux_HIVCancerPatientSummaries_HIVCancerSequence, by = join_by(PatientPseudonym)) %>%
+                                left_join(df_Aux_HIVCancerPatientSummaries_HIVCancerSequence, by = join_by(PatientID)) %>%
                                 ungroup()
                                 #=== Update Progress Bar ===
                                 try(ProgressBar$tick())

@@ -30,7 +30,7 @@ P21.DrawSampleDS <- function(RawDataSetName.S = "P21.RawDataSet",
 #-------------------------------------------------------------------------------
 
   # Get all available PatientIDs
-  AllPatientIDs <- unique(RawDataSet$Case$Patientennummer)
+  AllPatientIDs <- unique(RawDataSet$Case$PatientID)
   AvailableNumberPatients <- length(unique(AllPatientIDs))
 
   # Reduce SampleSize if necessary
@@ -42,8 +42,8 @@ P21.DrawSampleDS <- function(RawDataSetName.S = "P21.RawDataSet",
 
   # Get the corresponding CaseIDs
   SampleCaseIDs <- RawDataSet$Case %>%
-                        filter(Patientennummer %in% SamplePatientIDs) %>%
-                        pull("KH-internes-Kennzeichen") %>%
+                        filter(PatientID %in% SamplePatientIDs) %>%
+                        pull(CaseID) %>%
                         unique()
 
   # Subset RDS tables with sampled PatientIDs
@@ -52,7 +52,7 @@ P21.DrawSampleDS <- function(RawDataSetName.S = "P21.RawDataSet",
                                {
                                   if (length(Table) > 0 && nrow(Table) > 0)
                                   {
-                                      return(Table %>% filter(.data[["KH-internes-Kennzeichen"]] %in% SampleCaseIDs))
+                                      return(Table %>% filter(CaseID %in% SampleCaseIDs))
                                   }
                                   else { return(NULL) }
                                })

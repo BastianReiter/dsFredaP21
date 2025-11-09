@@ -56,6 +56,18 @@ CDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "P21.CuratedDataSet",
 # Augment data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# Only Comorbidity assessment
+#-------------------------------------------------------------------------------
+
+Comorb <- P21.AssessComorbidityDS(DiagnosisData.S = "P21.CuratedDataSet$DiagnosisICD",
+                                  DiagnosticCodeFeature.S = "ICD10Code",
+                                  IDFeature.S = "CaseID",
+                                  IgnoredCategories.S = c("canc", "metacanc"))
+
+
+# Further Augmentation
+#-------------------------------------------------------------------------------
+
 AugmentationOutput <- P21.AugmentDataDS(CuratedDataSetName.S = "P21.CuratedDataSet")
 
 ADS <- AugmentationOutput$AugmentedDataSet
@@ -75,6 +87,8 @@ ADSTableCheck <- GetDataSetCheckDS(DataSetName.S = "ADS",
 # encryptr::decrypt_file(.path = "P21_TestADS.rds.encryptr.bin",
 #                        file_name = "P21_TestADS.rds",
 #                        private_key_path = "id_rsa")
+
+
 
 
 

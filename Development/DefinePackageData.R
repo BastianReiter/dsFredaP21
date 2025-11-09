@@ -128,10 +128,10 @@ Res.ICD10Codes <- ICD10gm::icd_meta_codes %>%
                       select(year,
                              icd_code,
                              label) %>%
-                      rename(c(ICDVersion = "year",
+                      rename(c(ICD10Version = "year",
                                ICD10Code = "icd_code",
                                Diagnosis = "label")) %>%
-                      mutate(ICDVersion = as.character(ICDVersion),
+                      mutate(ICD10Version = as.character(ICD10Version),
                              ICD10Code = str_remove_all(ICD10Code, "\\.-"))
 
 use_data(Res.ICD10Codes, overwrite = TRUE)
