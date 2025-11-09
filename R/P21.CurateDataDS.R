@@ -382,7 +382,7 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
   CountEntries_Initial <- DataSet %>%
                               map_int(\(Table) ifelse (!is.null(nrow(Table)), nrow(Table), 0))
 
-  # Set up data set root (clean 'Case' table and select remaining 'CasePseudonyms')
+  # Set up data set root (clean 'Case' table and select remaining 'CaseIDs')
   DataSetRoot <- DataSet$Case %>%
                       {   if (Settings$TableCleaning$Run == TRUE)
                           {
@@ -393,7 +393,7 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
                                          FeatureObligations = Settings$FeatureObligations)
                           } else {.}
                       } %>%
-                      select(CasePseudonym) %>%
+                      select(CaseID) %>%
                       distinct()
 
 
@@ -417,7 +417,7 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
                           if (length(Table) > 0 && nrow(Table) > 0)
                           {
                               Table <- DataSetRoot %>%
-                                          left_join(Table, by = join_by(CasePseudonym))
+                                          left_join(Table, by = join_by(CaseID))
 
                               # Clean current table using dsFreda::CleanTable() (Can be optionally omitted)
                               if (Settings$TableCleaning$Run == TRUE)
@@ -1243,7 +1243,7 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
                                        FeatureObligations = Settings$FeatureObligations)
                         } else {.}
                     } %>%
-                    select(CasePseudonym) %>%
+                    select(CaseID) %>%
                     distinct()
 
 
@@ -1255,7 +1255,7 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
                         if (length(Table) > 0 && nrow(Table) > 0)
                         {
                             Table <- DataSetRoot %>%
-                                        left_join(Table, by = join_by(CasePseudonym))
+                                        left_join(Table, by = join_by(CaseID))
 
                             # Clean current table using dsFreda::CleanTable() (Can be optionally omitted)
                             if (Settings$TableCleaning$Run == TRUE)
@@ -1308,8 +1308,8 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
 #===============================================================================
 # MODULE F)  Find and remove secondary redundancies (table entries that can be considered redundant when they provide no additional informational value compared to a previous entry)
 #===============================================================================
-# 1)  Process table 'Case' first, since other tables hold primary key 'CasePseudonym'.
-#     Any 'CasePseudonym's that are removed due to redundancy need to be replaced in dependent tables.
+# 1)  Process table 'Case' first, since other tables hold primary key 'CaseID'.
+#     Any 'CaseID's that are removed due to redundancy need to be replaced in dependent tables.
 # 2)  Proceed with all other tables
 #-------------------------------------------------------------------------------
 
@@ -1322,7 +1322,7 @@ try(ProgressBar$tick())
 
 # Using dsFreda::FindRedundantEntries(), mark redundant entries in table 'Case' for further processing
 Aux_DiagnosisRedundancies <- DataSet$Case %>%
-                                  dsFreda::FindRedundantEntries(PrimaryKeyFeature = "CasePseudonym",
+                                  dsFreda::FindRedundantEntries(PrimaryKeyFeature = "CaseID",
                                                                 DiscriminatoryFeatures = dsFredaP21::Meta.Features %>%
                                                                                              filter(TableName.Curated == "Case", IsDiscriminatory == TRUE) %>%
                                                                                              pull(FeatureName.Curated),
@@ -1335,7 +1335,7 @@ Aux_DiagnosisRedundancies <- DataSet$Case %>%
 # Create a mapping structure to know which IDs to replace
 Aux_RedundanciesIDMapping <- Aux_DiagnosisRedundancies %>%
                                   filter(IsRedundant == TRUE) %>%
-                                  select(CasePseudonym, ReferenceID)
+                                  select(CaseID, ReferenceID)
 
 # Afterwards, remove redundant entries from 'Case'
 DataSet$Case <- Aux_DiagnosisRedundancies %>%
@@ -1351,14 +1351,14 @@ DataSet <- DataSet %>%
                         {
                             try(ProgressBar$tick())
 
-                            # Make sure the previously removed CasePseudonyms are replaced by respective reference CasePseudonyms...
-                            if ("CasePseudonym" %in% names(Table))
+                            # Make sure the previously removed CaseIDs are replaced by respective reference CaseIDs...
+                            if ("CaseID" %in% names(Table))
                             {
                                 Table <- Table %>%
-                                              left_join(Aux_RedundanciesIDMapping, by = join_by(CasePseudonym)) %>%
-                                              mutate(CasePseudonym = ifelse(!is.na(ReferenceID),
+                                              left_join(Aux_RedundanciesIDMapping, by = join_by(CaseID)) %>%
+                                              mutate(CaseID = ifelse(!is.na(ReferenceID),
                                                                             ReferenceID,
-                                                                            CasePseudonym)) %>%
+                                                                            CaseID)) %>%
                                               select(-ReferenceID)
                             }
 

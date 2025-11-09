@@ -1,6 +1,7 @@
 AggregateMethods:
     P21.GetCohortDescriptionDS,
 AssignMethods:
+    P21.AssessComorbidityDS,
     P21.AugmentDataDS,
     P21.CurateDataDS,
     P21.DrawSampleDS

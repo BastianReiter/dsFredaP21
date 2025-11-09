@@ -100,7 +100,7 @@ A \code{list} containing the following objects:
 \item Messages \code{list}}
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}} \cr\cr
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}} \cr\cr
 Transforms CCP Raw Data Set (RDS) into Curated Data Set (CDS) while tracing data transformation.
 }
 \details{
