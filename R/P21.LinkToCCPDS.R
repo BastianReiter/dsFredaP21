@@ -1,7 +1,7 @@
 
 #' P21.LinkToCCPDS
 #'
-#' Map P21 cases to DiagnosisIDs in CCP data
+#' Classify suitable P21 reference cases and map them to DiagnosisIDs in CCP data
 #'
 #' Server-side ASSIGN method
 #'
@@ -49,22 +49,28 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
                              AdmissionDate,
                              DischargeDate)
 
+  # Linkage of CCP PatientIDs with P21 PatientIDs and thus linkage of CCP PatientIDs to all associated P21 CaseIDs
   MapCCPPatToP21Cases <- CCP.ADS$Patient %>%
                             select(PatientID) %>%
                             left_join(P21.CaseInfo, by = join_by(PatientID)) %>%
                             rename(P21CaseID = "CaseID")
 
+  # Create data.frame that maps all CCP Diagnosis IDs to a P21 case in time-wise proximity to the cancer diagnosis date
+  # 1) Linkage of all CCP DiagnosisIDs to ALL P21 CaseIDs
+  # 2) Create hierarchy of reference case candidates (Class A, B, C)
+  # 3) Sort by hierarchy
+  # 4) Save most likely P21 case ID
   Mapping <- CCP.ADS$Diagnosis %>%
                 select(PatientID,
                        DiagnosisID,
                        DiagnosisDate) %>%
                 left_join(MapCCPPatToP21Cases, by = join_by(PatientID), relationship = "many-to-many") %>%
                 mutate(IsDiagnosisDateWithinCase = between(DiagnosisDate, AdmissionDate, DischargeDate),
-                       IntervalDischargeToDiagnosis = as.numeric(DiagnosisDate - DischargeDate),
-                       IntervalDiagnosisToAdmission = as.numeric(AdmissionDate - DiagnosisDate),
+                       IntervalDischargeToDiagnosis = as.numeric(DiagnosisDate - DischargeDate),      # If this number of days is positive, P21 case is located BEFORE cancer diagnosis
+                       IntervalDiagnosisToAdmission = as.numeric(AdmissionDate - DiagnosisDate),      # If this number of days is positive, P21 case is located AFTER cancer diagnosis
                        ReferenceCaseLikelihood = case_when(IsDiagnosisDateWithinCase == TRUE ~ 0,      # "Class A" candidate
-                                                           between(IntervalDischargeToDiagnosis, 0, Tolerance.DischargeToDiagnosis) ~ IntervalDischargeToDiagnosis,      # "Class B" candidate - case in time-wise proximity BEFORE cancer diagnosis
-                                                           between(IntervalDiagnosisToAdmission, 0, Tolerance.DiagnosisToAdmission) ~ IntervalDiagnosisToAdmission + Tolerance.DischargeToDiagnosis,      # "Class C" candidate - case in time-wise proximity AFTER cancer diagnosis. To make cases in this class less likely to be picked as reference case, add 'Tolerance.DischargeToDiagnosis'.
+                                                           between(IntervalDischargeToDiagnosis, 0, Tolerance.DischargeToDiagnosis.S) ~ IntervalDischargeToDiagnosis,      # "Class B" candidate - case in time-wise proximity BEFORE cancer diagnosis
+                                                           between(IntervalDiagnosisToAdmission, 0, Tolerance.DiagnosisToAdmission.S) ~ IntervalDiagnosisToAdmission + Tolerance.DischargeToDiagnosis.S,      # "Class C" candidate - case in time-wise proximity AFTER cancer diagnosis. To make cases in this class less likely to be picked as reference case, add 'Tolerance.DischargeToDiagnosis'.
                                                            .default = NA)) %>%
                 group_by(PatientID,
                          DiagnosisID) %>%
