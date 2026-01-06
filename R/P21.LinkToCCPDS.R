@@ -27,13 +27,14 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
   # --- For Testing Purposes ---
   # P21CDSName.S <- "P21.CuratedDataSet"
   # CCPADSName.S <- "CCP.AugmentedDataSet"
-  # CCPLinkPatIDFeature <- "DKTKIDLocal"
+  # CCPLinkPatIDFeature.S <- "DKTKIDLocal"
   # Tolerance.DischargeToDiagnosis.S <- 30
   # Tolerance.DiagnosisToAdmission.S <- 30
 
   # --- Argument Validation ---
   assert_that(is.string(P21CDSName.S),
               is.string(CCPADSName.S),
+              is.string(CCPLinkPatIDFeature.S),
               is.count(Tolerance.DischargeToDiagnosis.S),
               is.count(Tolerance.DiagnosisToAdmission.S))
 
@@ -53,7 +54,7 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
 
   # Linkage of CCP PatientIDs with P21 PatientIDs and thus linkage of CCP PatientIDs to all associated P21 CaseIDs
   MapCCPPatToP21Cases <- CCP.ADS$Patient %>%
-                            mutate(LinkPatientID = .data[[CCPLinkPatIDFeature]]) %>%
+                            mutate(LinkPatientID = .data[[CCPLinkPatIDFeature.S]]) %>%
                             select(PatientID,
                                    LinkPatientID) %>%
                             left_join(P21.CaseInfo, by = join_by(LinkPatientID == PatientID)) %>%
