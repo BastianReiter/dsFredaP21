@@ -7,6 +7,7 @@
 #'
 #' @param P21CDSName.S \code{string} - Name of P21 Curated Data Set on servers
 #' @param CCPADSName.S \code{string} - Name of CCP Augmented Data Set on servers
+#' @param CCPLinkPatIDFeature.S \code{string} - Name of feature that contains CCP Patient IDs that can be linked with P21 Patient IDs
 #' @param Tolerance.DischargeToDiagnosis.S \code{integer}
 #' @param Tolerance.DiagnosisToAdmission.S \code{integer}
 #'
@@ -18,6 +19,7 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
                             CCPADSName.S = "CCP.AugmentedDataSet",
+                            CCPLinkPatIDFeature.S = "DKTKIDLocal",
                             Tolerance.DischargeToDiagnosis.S = 30,
                             Tolerance.DiagnosisToAdmission.S = 30)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -25,6 +27,7 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
   # --- For Testing Purposes ---
   # P21CDSName.S <- "P21.CuratedDataSet"
   # CCPADSName.S <- "CCP.AugmentedDataSet"
+  # CCPLinkPatIDFeature <- "DKTKIDLocal"
   # Tolerance.DischargeToDiagnosis.S <- 30
   # Tolerance.DiagnosisToAdmission.S <- 30
 
@@ -42,7 +45,6 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
 
 #-------------------------------------------------------------------------------
 
-
   P21.CaseInfo <- P21.CDS$Case %>%
                       select(PatientID,
                              CaseID,
@@ -51,15 +53,19 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
 
   # Linkage of CCP PatientIDs with P21 PatientIDs and thus linkage of CCP PatientIDs to all associated P21 CaseIDs
   MapCCPPatToP21Cases <- CCP.ADS$Patient %>%
-                            select(PatientID) %>%
-                            left_join(P21.CaseInfo, by = join_by(PatientID)) %>%
-                            rename(P21CaseID = "CaseID")
+                            mutate(LinkPatientID = .data[[CCPLinkPatIDFeature]]) %>%
+                            select(PatientID,
+                                   LinkPatientID) %>%
+                            left_join(P21.CaseInfo, by = join_by(LinkPatientID == PatientID)) %>%
+                            rename(P21CaseID = "CaseID") %>%
+                            select(-LinkPatientID)
 
   # Create data.frame that maps all CCP Diagnosis IDs to a P21 case in time-wise proximity to the cancer diagnosis date
   # 1) Linkage of all CCP DiagnosisIDs to ALL P21 CaseIDs
   # 2) Create hierarchy of reference case candidates (Class A, B, C)
   # 3) Sort by hierarchy
   # 4) Save most likely P21 case ID
+  #-----------------------------------------------------------------------------
   Mapping <- CCP.ADS$Diagnosis %>%
                 select(PatientID,
                        DiagnosisID,
@@ -76,7 +82,7 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
                          DiagnosisID) %>%
                 arrange(desc(ReferenceCaseLikelihood), .by_group = TRUE) %>%
                 summarize(HasReferenceP21Case = any(!is.na(ReferenceCaseLikelihood)),
-                          ReferenceP21CaseID = ifelse(HasReferenceP21Case == TRUE, first(P21CaseID), NA)) %>%
+                          ReferenceP21CaseID = as.character(ifelse(HasReferenceP21Case == TRUE, first(P21CaseID), NA))) %>%
                 ungroup()
 
 #-------------------------------------------------------------------------------
