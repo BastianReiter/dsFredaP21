@@ -58,8 +58,7 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
                             select(PatientID,
                                    LinkPatientID) %>%
                             left_join(P21.CaseInfo, by = join_by(LinkPatientID == PatientID)) %>%
-                            rename(P21CaseID = "CaseID") %>%
-                            select(-LinkPatientID)
+                            rename(P21CaseID = "CaseID")
 
   # Create data.frame that maps all CCP Diagnosis IDs to a P21 case in time-wise proximity to the cancer diagnosis date
   # 1) Linkage of all CCP DiagnosisIDs to ALL P21 CaseIDs
@@ -80,6 +79,7 @@ P21.LinkToCCPDS <- function(P21CDSName.S = "P21.CuratedDataSet",
                                                            between(IntervalDiagnosisToAdmission, 0, Tolerance.DiagnosisToAdmission.S) ~ IntervalDiagnosisToAdmission + Tolerance.DischargeToDiagnosis.S,      # "Class C" candidate - case in time-wise proximity AFTER cancer diagnosis. To make cases in this class less likely to be picked as reference case, add 'Tolerance.DischargeToDiagnosis'.
                                                            .default = NA)) %>%
                 group_by(PatientID,
+                         LinkPatientID,
                          DiagnosisID) %>%
                 arrange(desc(ReferenceCaseLikelihood), .by_group = TRUE) %>%
                 summarize(HasReferenceP21Case = any(!is.na(ReferenceCaseLikelihood)),
