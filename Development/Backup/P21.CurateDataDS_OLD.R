@@ -2,7 +2,7 @@
 #' P21.CurateDataDS
 #'
 #' `r lifecycle::badge("experimental")` \cr\cr
-#' Transforms CCP Raw Data Set (RDS) into Curated Data Set (CDS) while tracing data transformation.
+#' Transforms P21 Raw Data Set (RDS) into Curated Data Set (CDS) while tracing data transformation.
 #'
 #' Server-side ASSIGN method
 #'
@@ -37,17 +37,7 @@
 #'                      \itemize{ \item BioSampling
 #'                                \item Diagnosis
 #'                                \item DiseaseStatus
-#'                                \item GeneralCondition
-#'                                \item Histology
-#'                                \item Metastasis
-#'                                \item MolecularDiagnostics
-#'                                \item OtherClassification
-#'                                \item Patient
-#'                                \item RadiationTherapy
-#'                                \item Staging
-#'                                \item Surgery
-#'                                \item SystemicTherapy
-#'                                \item TherapyRecommendation}
+#'                                \item GeneralCondition}
 #'                  \item CurationReport \code{list}
 #'                      \itemize{ \item EntryCounts \code{tibble}
 #'                                    \itemize{ \item Table
@@ -1064,10 +1054,10 @@ P21.CurateDataDS <- function(RawDataSetName.S = "P21.RawDataSet",
                                               ls_ValueCounts_Recoded,
                                               ls_ValueCounts_Final),
                                     .f = function(TransformationTracksSummary,
-                                                 ValueCountsRaw,
-                                                 ValueCountsHarmonized,
-                                                 ValueCountsRecoded,
-                                                 ValueCountsFinal)
+                                                  ValueCountsRaw,
+                                                  ValueCountsHarmonized,
+                                                  ValueCountsRecoded,
+                                                  ValueCountsFinal)
                                          {
                                              if (nrow(TransformationTracksSummary) > 0)
                                              {

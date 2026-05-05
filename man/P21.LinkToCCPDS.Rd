@@ -7,6 +7,7 @@
 P21.LinkToCCPDS(
   P21CDSName.S = "P21.CuratedDataSet",
   CCPADSName.S = "CCP.AugmentedDataSet",
+  CCPLinkPatIDFeature.S = "DKTKIDLocal",
   Tolerance.DischargeToDiagnosis.S = 30,
   Tolerance.DiagnosisToAdmission.S = 30
 )
@@ -15,6 +16,8 @@ P21.LinkToCCPDS(
 \item{P21CDSName.S}{\code{string} - Name of P21 Curated Data Set on servers}
 
 \item{CCPADSName.S}{\code{string} - Name of CCP Augmented Data Set on servers}
+
+\item{CCPLinkPatIDFeature.S}{\code{string} - Name of feature that contains CCP Patient IDs that can be linked with P21 Patient IDs}
 
 \item{Tolerance.DischargeToDiagnosis.S}{\code{integer}}
 

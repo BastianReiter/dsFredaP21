@@ -6,7 +6,7 @@ library(dplyr)
 # Load P21 data as raw data set
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-P21.RawDataSet <- readRDS(file = "./Development/Data/RealData/RawDataSet.rds")
+P21.RawDataSet <- readRDS(file = "C:/Users/Basti/ARBEIT Lokal/dsFredaP21/Development/Data/RealData/RawDataSet.rds")
 #RawDataSetProc <- readRDS(file = "./Development/Data/RealData/RawDataSet_PreProcessed.rds")
 
 
@@ -31,21 +31,18 @@ RDSTableCheck <- dsFreda::GetDataSetCheckDS(DataSetName.S = "P21.RawDataSet",
 # OPTIONAL: Draw sample from Raw Data Set
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-P21.RawDataSet <- P21.DrawSampleDS(RawDataSetName.S = "P21.RawDataSet",
-                                   SampleSize.S = 5000)
+# P21.RawDataSet <- P21.DrawSampleDS(RawDataSetName.S = "P21.RawDataSet",
+#                                    SampleSize.S = 5000)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Curate data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CurationOutput <- P21.CurateDataDS(RawDataSetName.S = "P21.RawDataSet",
-                                   Settings.S = list(DataHarmonization = list(Run = TRUE,
-                                                                              Profile = "Default"),
-                                                     FeatureObligations = list(Profile = "Default"),
-                                                     FeatureTracking = list(Profile = "Default"),
-                                                     TableCleaning = list(Run = TRUE)))
 
-P21.CuratedDataSet <- CurationOutput$CuratedDataSet
+CurationOutput <- dsFreda::CurateDataDS(RawDataSetName.S = "P21.RawDataSet",
+                                        Module.S = "P21")
+
+P21.CuratedDataSet <- CurationOutput$DataSet
 
 CDSTableCheck <- GetDataSetCheckDS(DataSetName.S = "P21.CuratedDataSet",
                                    Module.S = "P21",
