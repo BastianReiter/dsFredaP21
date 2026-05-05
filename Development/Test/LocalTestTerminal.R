@@ -12,9 +12,10 @@ P21.RawDataSet <- readRDS(file = "C:/Users/Basti/ARBEIT Lokal/dsFredaP21/Develop
 
 RDSPreparation <- dsFreda::PrepareRawDataDS(RawDataSetName.S = "P21.RawDataSet",
                                             Module.S = "P21",
-                                            FeatureNameDictionary.S = list(Department = c(FAB = "Fachabteilung")),
-                                            RunFuzzyStringMatching.S = TRUE,
-                                            CurateFeatureNames.S = TRUE)
+                                            FeatureNames.Dictionary.S = list(Department = c(FAB = "Fachabteilung")),
+                                            FeatureNames.FuzzyStringMatching.Run.S = TRUE,
+                                            CurateFeatureNames.S = TRUE,
+                                            Conversion.DateIntoPOSIXct.S = list(".All" = c("%Y%m%d%H%M", "%Y%m%d", "%Y-%m-%d")))
 
 P21.RawDataSet <- RDSPreparation$RawDataSet
 
