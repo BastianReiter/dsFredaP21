@@ -15,7 +15,7 @@ RDSPreparation <- dsFreda::PrepareRawDataDS(RawDataSetName.S = "P21.RawDataSet",
                                             FeatureNames.Dictionary.S = list(Department = c(FAB = "Fachabteilung")),
                                             FeatureNames.FuzzyStringMatching.Run.S = TRUE,
                                             CurateFeatureNames.S = TRUE,
-                                            Conversion.DateIntoPOSIXct.S = list(".All" = c("%Y%m%d%H%M", "%Y%m%d", "%Y-%m-%d")))
+                                            Conversion.DateIntoPOSIXct.S = list(".All" = "c('%Y%m%d%H%M', '%Y%m%d', '%Y-%m-%d')") %>% map(\(x) .encode_tidy_eval(x, .get_encode_dictionary())))
 
 P21.RawDataSet <- RDSPreparation$RawDataSet
 
