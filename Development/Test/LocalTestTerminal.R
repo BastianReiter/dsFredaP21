@@ -1,12 +1,14 @@
 
 
+library(dsFreda)
 library(dplyr)
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Load P21 data as raw data set
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-P21.RawDataSet <- readRDS(file = "C:/Users/Basti/ARBEIT Lokal/dsFredaP21/Development/Data/RealData/RawDataSet.rds")
+P21.RawDataSet <- readRDS("../Data/P21/RawDataSet.rds")
 #RawDataSetProc <- readRDS(file = "./Development/Data/RealData/RawDataSet_PreProcessed.rds")
 
 
@@ -15,7 +17,8 @@ RDSPreparation <- dsFreda::PrepareRawDataDS(RawDataSetName.S = "P21.RawDataSet",
                                             FeatureNames.Dictionary.S = list(Department = c(FAB = "Fachabteilung")),
                                             FeatureNames.FuzzyStringMatching.Run.S = TRUE,
                                             CurateFeatureNames.S = TRUE,
-                                            Conversion.DateIntoPOSIXct.S = list(".All" = "c('%Y%m%d%H%M', '%Y%m%d', '%Y-%m-%d')") %>% map(\(x) .encode_tidy_eval(x, .get_encode_dictionary())))
+                                            Conversion.DateIntoPOSIXct.S = .encode_tidy_eval("list('.All' = c('%Y%m%d%H%M', '%Y%m%d', '%Y-%m-%d'))", .get_encode_dictionary()))
+                                            #Conversion.DateIntoPOSIXct.S = list(".All" = "c('%Y%m%d%H%M', '%Y%m%d', '%Y-%m-%d')") %>% map(\(x) .encode_tidy_eval(x, .get_encode_dictionary())))
 
 P21.RawDataSet <- RDSPreparation$RawDataSet
 
