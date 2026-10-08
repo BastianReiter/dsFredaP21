@@ -9,7 +9,7 @@ library(usethis)
 # Read in Package Data from xlsx-file
 #===============================================================================
 
-ExcelFilePath <- "./Development/Data/Module/ModuleDataFredaP21.xlsx"
+ExcelFilePath <- "./Development/Data/Module/FREDAModule_P21.xlsx"
 
 Sheetnames <- c("Meta.Tables",
                 "Meta.Features",
@@ -24,6 +24,7 @@ Sheetnames <- c("Meta.Tables",
                 "Set.FeatureTracking",
                 "Set.DataRemediation",
                 "Set.TransformativeExpressions",
+                "Set.StringExtraction",
                 "Set.Dictionary",
                 "Set.FuzzyStringMatching")
 
