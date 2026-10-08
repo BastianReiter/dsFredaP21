@@ -1,6 +1,7 @@
 
 
 library(dsFreda)
+library(dsFredaClient)
 library(dplyr)
 
 
